@@ -1,0 +1,244 @@
+        /* --- View Image (Excel sheet row action) ---------------------- */
+        .iv-photo-frame {
+            width: 140px;
+            height: 140px;
+            border-radius: 10px;
+            background: #EEF1F5;
+            border: 1px solid #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .iv-photo-frame i { font-size: 3rem; color: #9CA3AF; }
+
+        .iv-name { font-size: 0.9rem; font-weight: 800; color: #1F2937; }
+        .iv-note { font-size: 0.72rem; color: #6B7280; text-align: center; }
+
+        /* --- Request Lifecycle Timeline (vertical, enterprise style) ------ */
+        .rt-timeline {
+            display: flex;
+            flex-direction: column;
+            padding: 4px 6px;
+        }
+
+        .rt-stage {
+            position: relative;
+            padding: 0 0 22px 28px;
+        }
+
+        .rt-stage:last-child { padding-bottom: 2px; }
+
+        .rt-stage::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 16px;
+            bottom: -6px;
+            width: 2px;
+            background: #E2E8F0;
+        }
+
+        .rt-stage:last-child::before { display: none; }
+
+        .rt-dot {
+            position: absolute;
+            left: 0;
+            top: 2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 3px solid #9CA3AF;
+            box-sizing: border-box;
+            z-index: 1;
+        }
+
+        .rt-stage.green .rt-dot { border-color: #2E7D32; background: #2E7D32; }
+        .rt-stage.blue .rt-dot { border-color: #1E5AA8; background: #1E5AA8; }
+        .rt-stage.red .rt-dot { border-color: #C62828; background: #C62828; }
+
+        .rt-stage-title {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: #1F2937;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .rt-stage.green .rt-stage-title { color: #1E5C21; }
+        .rt-stage.blue .rt-stage-title { color: #164b8c; }
+        .rt-stage.red .rt-stage-title { color: #8E1F1F; }
+
+        .rt-status-chip {
+            font-size: 0.58rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 1px 6px;
+            border-radius: 8px;
+        }
+
+        .rt-stage.green .rt-status-chip { background: #E6F2E6; color: #1E5C21; }
+        .rt-stage.blue .rt-status-chip { background: #DCEAFB; color: #164b8c; }
+        .rt-stage.red .rt-status-chip { background: #F8E1E1; color: #8E1F1F; }
+
+        .rt-stage-meta {
+            font-size: 0.72rem;
+            color: #6B7280;
+            margin-top: 4px;
+            display: flex;
+            gap: 14px;
+        }
+
+        .rt-stage-meta i { width: 12px; text-align: center; color: #9CA3AF; }
+
+        /* --- History drawer (right-side slide-over, replaces the old
+           centered Timeline modal). Deliberately uses fixed light colors
+           to match the other cr-modal-family surfaces (form/timeline),
+           consistent with the companion vendor.html SidePanel component. */
+        .hd-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.35);
+            z-index: 2100;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .hd-backdrop.open { display: block; opacity: 1; }
+
+        .history-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            z-index: 2101;
+            height: 100%;
+            width: 420px;
+            max-width: 92vw;
+            background: #ffffff;
+            box-shadow: -8px 0 32px rgba(0,0,0,0.28);
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.34, 0.9, 0.44, 1);
+        }
+        .hd-backdrop.open .history-drawer { transform: translateX(0); }
+
+        .hd-header {
+            background: var(--brand-primary, #163B70);
+            color: #ffffff;
+            padding: 14px 18px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .hd-header-title { font-size: 0.92rem; font-weight: 800; }
+        .hd-header-sub { font-size: 0.72rem; color: rgba(255,255,255,0.75); margin-top: 2px; }
+        .hd-header-badges { display: flex; gap: 6px; margin-top: 8px; }
+        .hd-close-btn { background: none; border: none; color: rgba(255,255,255,0.85); font-size: 1rem; cursor: pointer; padding: 2px 4px; }
+        .hd-close-btn:hover { color: #ffffff; }
+
+        .hd-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 18px;
+        }
+
+        .hd-section-label {
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #6B7280;
+            margin: 14px 0 8px;
+        }
+        .hd-section-label:first-child { margin-top: 0; }
+
+        .hd-comment {
+            border: 1px solid #E5E7EB;
+            background: #FAFBFC;
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+        }
+        .hd-comment.hd-comment-new { background: #E3EDF9; border-color: #C7DAF0; }
+        .hd-comment-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+        .hd-comment-author { font-size: 0.76rem; font-weight: 700; color: #1F2937; }
+        .hd-comment-time { font-size: 0.65rem; color: #9CA3AF; flex-shrink: 0; }
+        .hd-comment-text { font-size: 0.78rem; color: #374151; line-height: 1.4; }
+        .hd-comment-empty { font-size: 0.76rem; color: #9CA3AF; font-style: italic; padding: 6px 0; }
+
+        .hd-footer {
+            border-top: 1px solid #E5E7EB;
+            padding: 12px 18px;
+            flex-shrink: 0;
+            background: #FAFBFC;
+        }
+        .hd-textarea {
+            width: 100%;
+            resize: vertical;
+            min-height: 56px;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 0.8rem;
+            font-family: inherit;
+            margin-bottom: 8px;
+        }
+        .hd-textarea:focus { outline: none; border-color: #1E5AA8; box-shadow: 0 0 0 3px rgba(30,90,168,0.15); }
+        .hd-submit-btn {
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+            padding: 9px 16px;
+            background: #1E5AA8;
+            color: #ffffff;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .hd-submit-btn:hover { background: #164b8c; }
+        .hd-submit-btn:disabled { background: #A9BCD6; cursor: not-allowed; }
+
+        @media (max-width: 760px) {
+            .history-drawer { width: 100%; max-width: 100vw; }
+        }
+
+        .cr-modal-footer {
+            padding: 10px 26px;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-shrink: 0;
+            background: #FAFBFC;
+        }
+
+        .cr-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 9px 20px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.15s ease, transform 0.15s ease;
+        }
+
+        .cr-btn:active { transform: translateY(1px); }
+        .cr-btn-secondary { background: #E5E7EB; color: #374151; }
+        .cr-btn-secondary:hover { background: #D1D5DB; }
+        .cr-btn-primary { background: #1E5AA8; color: #ffffff; }
+        .cr-btn-primary:hover { background: #164b8c; }
+
+        @media (max-width: 1000px) {
+            .cr-field-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 760px) {
+            .cr-field-grid { grid-template-columns: 1fr; }
+            .cr-modal { width: 100%; height: 100vh; max-height: 100vh; border-radius: 0; }
+        }
+

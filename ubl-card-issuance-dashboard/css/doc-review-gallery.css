@@ -1,0 +1,362 @@
+        .mini-table-container {
+            flex: 1;
+            min-height: 60px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--input-bg);
+        }
+
+        .compact-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.62rem;
+        }
+
+        .compact-table th {
+            background: var(--excel-header);
+            color: var(--text-muted);
+            font-weight: 700;
+            padding: 4px 6px;
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+            text-transform: uppercase;
+            font-size: 0.56rem;
+            text-align: left;
+        }
+
+        .compact-table td {
+            padding: 3px 6px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .compact-table tr:hover { background: var(--excel-hover); }
+
+        .vendor-clickable-cell {
+            cursor: pointer;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 2px;
+        }
+
+        .vendor-clickable-cell:hover { opacity: 0.7; }
+
+        /* Mobile & Tablet Responsive Adjustments */
+        @media (max-width: 1024px) {
+            body {
+                height: auto !important;
+                overflow-y: auto !important;
+            }
+
+            .filter-bar {
+                flex-wrap: wrap !important;
+            }
+
+            .grid-viewport {
+                height: auto !important;
+                overflow: visible !important;
+            }
+
+            .dashboard-row, .row-top, .row-bottom {
+                flex-direction: column !important;
+                height: auto !important;
+                flex: none !important;
+            }
+
+            .panel {
+                height: 380px !important;
+                min-height: 380px !important;
+                flex: none !important;
+            }
+
+            .kpi-tables-row {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .kpi-table-card { height: 220px !important; }
+
+            .mini-card-layout {
+                grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            }
+
+            .mini-card-big {
+                grid-row: span 1;
+                grid-column: 1 / -1;
+            }
+
+            .card-subgrid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* ===================================================================
+           Document Review feature: Gallery module + shared Preview Modal +
+           Reject Reason dialog. Reuses .cr-modal-backdrop/.cr-modal as the
+           base dialog shell (sized via inline style) for consistency with
+           every other modal already in this dashboard.
+           =================================================================== */
+        .btn-doc-review {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-blue);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+            transition: background-color 0.15s ease, transform 0.15s ease;
+            white-space: nowrap;
+        }
+        .btn-doc-review:hover { transform: translateY(-1px); }
+
+        /* --- Summary cards -------------------------------------------- */
+        .dr-summary-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .dr-summary-card {
+            background: #ffffff;
+            border: 1px solid #E5E7EB;
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            user-select: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+        }
+
+        .dr-summary-card:hover { border-color: #cbd5e1; }
+        .dr-summary-row.filtering .dr-summary-card:not(.active) { opacity: 0.55; }
+
+        .dr-summary-value { font-size: 1.3rem; font-weight: 800; color: #1F2937; }
+        .dr-summary-label { font-size: 0.68rem; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.3px; }
+        .dr-summary-card.total .dr-summary-value { color: #163B70; }
+        .dr-summary-card.pending .dr-summary-value { color: #A34E02; }
+        .dr-summary-card.approved .dr-summary-value { color: #1E5C21; }
+        .dr-summary-card.rejected .dr-summary-value { color: #8E1F1F; }
+
+        .dr-summary-card.total.active { border-color: #163B70; box-shadow: 0 0 0 2px #163B70; }
+        .dr-summary-card.pending.active { border-color: #A34E02; box-shadow: 0 0 0 2px #A34E02; }
+        .dr-summary-card.approved.active { border-color: #1E5C21; box-shadow: 0 0 0 2px #1E5C21; }
+        .dr-summary-card.rejected.active { border-color: #8E1F1F; box-shadow: 0 0 0 2px #8E1F1F; }
+
+        /* --- Filter bar -------------------------------------------------- */
+        .dr-filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 10px;
+            background: #F8FAFC;
+            border: 1px solid #E5E7EB;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 16px;
+        }
+
+        .dr-filter-item { display: flex; flex-direction: column; gap: 2px; }
+        .dr-filter-item label { font-size: 0.6rem; font-weight: 700; color: #6B7280; text-transform: uppercase; }
+        .dr-filter-item select, .dr-filter-item input {
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            padding: 4px 6px;
+            font-size: 0.72rem;
+            background: #ffffff;
+            color: #1F2937;
+        }
+        .dr-filter-item input[type="date"] { width: 118px; }
+        .dr-filter-item input.dr-search { width: 180px; }
+
+        /* Card Functionality filter: a compact RF/HF split pill, matching the main
+           dashboard's split KPI card interaction (click a half to filter). */
+        .dr-cardtype-split {
+            display: flex;
+            align-items: stretch;
+            height: 24px;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            overflow: hidden;
+            background: #ffffff;
+        }
+        .dr-cardtype-half {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            font-size: 0.66rem;
+            font-weight: 700;
+            color: #374151;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+        .dr-cardtype-half:hover { background: #F1F5F9; }
+        .dr-cardtype-half.active { background: #1E5AA8; color: #ffffff; }
+        .dr-cardtype-divider { width: 1px; background: #E5E7EB; }
+
+        /* Card Type (Conventional/Islamic) split pill - same interaction as the
+           RF/HF pill above, but with wider halves so the longer labels fit
+           on one line without crowding. */
+        .dr-cardtype-split-wide .dr-cardtype-half { width: auto; padding: 0 10px; white-space: nowrap; font-size: 0.68rem; }
+
+        /* Pagination */
+        .dr-pagination-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid #E5E7EB;
+            flex-wrap: wrap;
+        }
+        .dr-pagination-summary { font-size: 0.68rem; color: #6B7280; font-weight: 600; }
+        .dr-pagination-controls { display: flex; align-items: center; gap: 6px; }
+        .dr-page-btn {
+            width: 26px;
+            height: 26px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #1E5AA8;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.66rem;
+        }
+        .dr-page-btn:hover:not(:disabled) { background: #EFF6FF; }
+        .dr-page-btn:disabled { color: #cbd5e1; cursor: not-allowed; }
+        .dr-page-label { font-size: 0.7rem; font-weight: 700; color: #374151; min-width: 64px; text-align: center; }
+        .dr-showall-btn {
+            margin-left: 6px;
+            background: #1E5AA8;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 12px;
+            font-size: 0.66rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .dr-showall-btn:hover { opacity: 0.9; }
+        .dr-showall-btn.active { background: #374151; }
+
+        .dr-btn-reset-filters {
+            background: #E5E7EB;
+            color: #374151;
+            border: none;
+            border-radius: 5px;
+            padding: 6px 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            height: 27px;
+        }
+
+        /* --- Gallery grid -------------------------------------------- */
+        .dr-gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 14px;
+        }
+
+        .dr-empty-state {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 40px 0;
+            color: #9CA3AF;
+            font-size: 0.8rem;
+        }
+        .dr-empty-state i { font-size: 2rem; }
+
+        .dr-card {
+            background: #ffffff;
+            border: 1px solid #E5E7EB;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            transition: box-shadow 0.15s ease, transform 0.15s ease;
+        }
+        .dr-card:hover { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12); transform: translateY(-2px); }
+
+        .dr-card-thumb {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            background: #EEF1F5;
+            overflow: hidden;
+        }
+        .dr-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        /* Simulated upload-quality issues, applied to both gallery
+           thumbnails and the large preview image. */
+        .dr-issue-blurry { filter: blur(2.5px); }
+        .dr-issue-dark { filter: brightness(0.4); }
+        .dr-issue-low_res { filter: blur(1px) contrast(0.85); image-rendering: pixelated; }
+
+        .dr-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            font-size: 0.56rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 2px 7px;
+            border-radius: 9px;
+            color: #ffffff;
+        }
+        .dr-badge.approved { background: #2E7D32; }
+        .dr-badge.pending { background: #ED6C02; }
+        .dr-badge.rejected { background: #C62828; }
+
+        .dr-card-body { padding: 8px 10px; flex: 1; }
+        .dr-card-id { font-size: 0.74rem; font-weight: 800; color: #1E5AA8; }
+        .dr-card-name { font-size: 0.76rem; font-weight: 700; color: #1F2937; margin-top: 2px; }
+        .dr-card-meta { font-size: 0.66rem; color: #6B7280; margin-top: 3px; display: flex; align-items: center; gap: 5px; }
+
+        .dr-card-actions {
+            display: flex;
+            border-top: 1px solid #E5E7EB;
+        }
+        .dr-btn {
+            flex: 1;
+            border: none;
+            background: #ffffff;
+            padding: 7px 0;
+            font-size: 0.68rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: background 0.15s ease;
+        }
+        .dr-btn + .dr-btn { border-left: 1px solid #E5E7EB; }
+        .dr-btn-view { color: #1E5AA8; }
+        .dr-btn-view:hover { background: #EEF3FA; }
+        .dr-btn-approve { color: #2E7D32; }
+        .dr-btn-approve:hover { background: #E6F2E6; }
+        .dr-btn-reject { color: #C62828; }
+        .dr-btn-reject:hover { background: #F8E1E1; }
+

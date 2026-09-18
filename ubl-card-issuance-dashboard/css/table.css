@@ -1,0 +1,222 @@
+        .excel-table-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--input-bg);
+        }
+
+        .excel-table {
+            width: max-content;
+            min-width: 100%;
+            table-layout: auto;
+            border-collapse: collapse;
+            font-size: 0.65rem;
+            text-align: left;
+        }
+
+        .excel-table th {
+            background-color: var(--excel-header);
+            color: var(--text-muted);
+            font-weight: 700;
+            padding: 4px 6px;
+            border-bottom: 2px solid var(--border);
+            border-right: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            text-transform: uppercase;
+            font-size: 0.6rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .excel-table th.col-hidden, .excel-table td.col-hidden { display: none; }
+
+        .col-resize-handle {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            cursor: col-resize;
+            z-index: 4;
+        }
+
+        .col-resize-handle:hover { background: var(--accent-blue); opacity: 0.5; }
+
+        .excel-table th[draggable="true"] { cursor: grab; }
+        .excel-table th.col-drag-over { outline: 2px dashed var(--accent-blue); outline-offset: -2px; }
+
+        .excel-table td:first-child, .excel-table th:first-child,
+        .excel-table td:nth-child(2), .excel-table th:nth-child(2) {
+            position: sticky;
+            background: var(--input-bg);
+            z-index: 1;
+        }
+        .excel-table th:first-child, .excel-table th:nth-child(2) { z-index: 3; background: var(--excel-header); }
+        .excel-table td:first-child, .excel-table th:first-child { left: 0; }
+        .excel-table td:nth-child(2), .excel-table th:nth-child(2) { left: 26px; }
+
+        .excel-table tbody tr:nth-child(even) td { background: var(--excel-hover); }
+        .excel-table tbody tr:nth-child(even) td:first-child,
+        .excel-table tbody tr:nth-child(even) td:nth-child(2) { background: var(--excel-hover); }
+
+        .priority-badge {
+            font-size: 0.56rem;
+            font-weight: 700;
+            padding: 1px 5px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+        .priority-badge.priority { background: var(--badge-red-bg); color: var(--badge-red-text); }
+        .priority-badge.standard { background: var(--filter-bg); color: var(--text-muted); }
+
+        .row-action-icon {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+        .row-action-icon:hover { color: var(--accent-blue); background: var(--filter-bg); }
+
+        .col-visibility-panel {
+            position: fixed;
+            display: none;
+            width: 190px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+            padding: 6px;
+            z-index: 50;
+        }
+        .col-visibility-panel.open { display: block; }
+
+        .col-visibility-options {
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .col-visibility-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 6px;
+            font-size: 0.62rem;
+            color: var(--text-main);
+            white-space: nowrap;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .col-visibility-option:hover { background: var(--filter-bg); }
+
+        .ms-panel-toolbar { padding: 0 8px; }
+
+        .ms-panel-search {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 4px 6px;
+            font-size: 0.66rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--input-bg);
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .ms-panel-actions {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
+            margin-bottom: 3px;
+        }
+
+        .ms-panel-actions span {
+            font-size: 0.56rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            cursor: pointer;
+        }
+
+        .ms-panel-actions span:hover { text-decoration: underline; }
+
+        .th-filter-icon {
+            cursor: pointer;
+            margin-left: 3px;
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        .th-filter-icon:hover { opacity: 1; color: var(--accent-blue); }
+
+        .th-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sort-icon {
+            font-size: 0.55rem;
+            opacity: 0.5;
+        }
+
+        .sort-icon:hover { opacity: 1; }
+        .sort-icon.active { opacity: 1; color: var(--accent-blue); }
+
+        .th-filter-icon.filter-active { opacity: 1; color: var(--accent-blue); }
+
+        .excel-table td {
+            padding: 4px 6px;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .excel-table tr:hover { background-color: var(--excel-hover); }
+
+        .status-badge {
+            display: inline-block;
+            padding: 1px 5px;
+            border-radius: 8px;
+            font-size: 0.58rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .status-badge.approved { background-color: var(--badge-green-bg); color: var(--badge-green-text); }
+        .status-badge.pending { background-color: var(--badge-amber-bg); color: var(--badge-amber-text); }
+        .status-badge.rejected { background-color: var(--badge-red-bg); color: var(--badge-red-text); }
+
+        /* Vendor Status badges - same visual pattern as .status-badge,
+           color vocabulary shared with the companion vendor.html dashboard:
+           Received=gray, In Process=blue, Ready for Dispatch=indigo,
+           Delivered=green, Pending=amber, Rejected=red. */
+        .status-badge.vs-received { background-color: var(--badge-gray-bg); color: var(--badge-gray-text); }
+        .status-badge.vs-inprocess { background-color: var(--badge-blue-bg); color: var(--badge-blue-text); }
+        .status-badge.vs-ready { background-color: var(--badge-indigo-bg); color: var(--badge-indigo-text); }
+        .status-badge.vs-delivered { background-color: var(--badge-green-bg); color: var(--badge-green-text); }
+        .status-badge.vs-pending { background-color: var(--badge-amber-bg); color: var(--badge-amber-text); }
+        .status-badge.vs-rejected { background-color: var(--badge-red-bg); color: var(--badge-red-text); }
+
+        .not-sent-badge {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.35);
+            color: var(--accent-red);
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 0.58rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+

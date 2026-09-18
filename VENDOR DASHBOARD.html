@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UBL — Vendor Card Print Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          navy: { 900: '#0F1B2E', 800: '#132A45', 700: '#163B70', 600: '#1E5AA8' },
+        },
+      },
+    },
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+<style>
+  html, body, #root { height: 100%; margin: 0; }
+  body { overflow: hidden; background: #F5F7FA; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+  window.addEventListener('error', function (e) {
+    var root = document.getElementById('root');
+    if (root && !root.hasChildNodes()) {
+      root.innerHTML = '<pre style="padding:16px;color:#b91c1c;font-family:monospace;white-space:pre-wrap;">Failed to load dashboard:\n' +
+        (e.message || e.error) + '</pre>';
+    }
+  });
+</script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useCallback, useEffect, useRef } = React;
+
+// ---------------------------------------------------------------------------
+// Inline SVG icons (no external icon library — avoids UMD/ESM React conflicts)
+// ---------------------------------------------------------------------------
+function makeIcon(children) {
+  return function Icon({ size = 16, className = '' }) {
+    return (
+      <svg
+        width={size} height={size} viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        className={className}
+      >
+        {children}
+      </svg>
+    );
+  };
+}
+
+const ICONS = {
+  Download: makeIcon(<><path d="M12 3v12" /><path d="m7 11 5 5 5-5" /><path d="M5 21h14" /></>),
+  RotateCcw: makeIcon(<><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></>),
+  Calendar: makeIcon(<><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4" /><path d="M8 2v4" /><path d="M3 10h18" /></>),
+  Inbox: makeIcon(<><path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></>),
+  Printer: makeIcon(<><path d="M6 9V2h12v7" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></>),
+  PackageCheck: makeIcon(<><path d="m16 16 2 2 4-4" /><path d="M21 10V7l-9-4-9 4v10l9 4 2-1" /><path d="M3.29 7 12 12l8.71-5" /><path d="M12 22V12" /></>),
+  AlertTriangle: makeIcon(<><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></>),
+  ListChecks: makeIcon(<><path d="m3 17 2 2 4-4" /><path d="m3 7 2 2 4-4" /><path d="M13 6h8" /><path d="M13 12h8" /><path d="M13 18h8" /></>),
+  ChevronDown: makeIcon(<path d="m6 9 6 6 6-6" />),
+  ShieldCheck: makeIcon(<><path d="M20 13c0 5-3.5 7.5-7.35 8.95a1 1 0 0 1-.6.05C8.5 20.5 5 18 5 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C15.51 3.81 18 5 20 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></>),
+  X: makeIcon(<><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>),
+  AlertOctagon: makeIcon(<><path d="M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86Z" /><path d="M12 8v4" /><path d="M12 16h.01" /></>),
+  Filter: makeIcon(<path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z" />),
+  Send: makeIcon(<><path d="M22 2 11 13" /><path d="M22 2 15 22 11 13 2 9 22 2Z" /></>),
+  MessageSquare: makeIcon(<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />),
+};
+
+// ---------------------------------------------------------------------------
+// Mock data
+// ---------------------------------------------------------------------------
+const NAMES = ['Ahmed Raza','Sana Malik','Bilal Hussain','Ayesha Khan','Usman Tariq','Hina Farooq',
+  'Zeeshan Ali','Mahnoor Iqbal','Fahad Sheikh','Nida Aslam','Kamran Yousuf','Sadia Baig',
+  'Waqas Ahmed','Rabia Sultan','Omar Farooqui','Farah Naz','Junaid Akram','Sobia Rehman',
+  'Adeel Chaudhry','Maria Siddiqui'];
+
+const STATUSES = ['Received','In Process','Ready for Dispatch','Delivered','Pending','Rejected'];
+const CATEGORIES = ['Conventional','Islamic'];
+const FUNCTIONALITIES = ['HF','RF'];
+const ISSUANCE_TYPES = ['New','Renewal','Replacement'];
+const FREQUENCIES = ['Daily','Weekly','Monthly'];
+const HR_STATUSES = ['Confirmed','Pending HR','Declined'];
+const HR_REASONS = [
+  'Chip encoding error during terminal check.',
+  'Demographic mismatch with NADRA record.',
+  'Damaged card strip detected at QA stage.',
+  'Signature mismatch on application form.',
+  'Photo verification failed against CNIC.',
+];
+const UBL_AUTHORS = ['UBL HR Ops (Tariq M.)', 'UBL Ops (Sana K.)', 'UBL Branch Officer (Ali R.)'];
+const VENDOR_AUTHOR = 'Vendor Ops (TCS Print Facility)';
+
+function seededRandom(seed) {
+  let s = seed;
+  return () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+}
+
+function isoAt(baseDate, hourOffset) {
+  const d = new Date(baseDate);
+  d.setHours(d.getHours() + hourOffset);
+  return d.toISOString();
+}
+
+function generateComments(rnd, received, hrStatus, hrReason) {
+  const pickAuthor = () => UBL_AUTHORS[Math.floor(rnd() * UBL_AUTHORS.length)];
+  const comments = [
+    {
+      id: `c-${Math.floor(rnd() * 1e6)}`,
+      author: pickAuthor(),
+      role: 'UBL Dashboard',
+      timestamp: isoAt(received, 2 + Math.floor(rnd() * 6)),
+      text: 'Request received and queued for UBL verification.',
+    },
+  ];
+
+  if (hrStatus === 'Declined') {
+    comments.push({
+      id: `c-${Math.floor(rnd() * 1e6)}`,
+      author: pickAuthor(),
+      role: 'UBL Dashboard',
+      timestamp: isoAt(received, 24 + Math.floor(rnd() * 24)),
+      text: `Declined: ${hrReason}`,
+    });
+  } else if (hrStatus === 'Confirmed') {
+    comments.push({
+      id: `c-${Math.floor(rnd() * 1e6)}`,
+      author: pickAuthor(),
+      role: 'UBL Dashboard',
+      timestamp: isoAt(received, 20 + Math.floor(rnd() * 20)),
+      text: 'Verification complete. Applicant documents matched NADRA record.',
+    });
+  } else {
+    comments.push({
+      id: `c-${Math.floor(rnd() * 1e6)}`,
+      author: pickAuthor(),
+      role: 'UBL Dashboard',
+      timestamp: isoAt(received, 18 + Math.floor(rnd() * 12)),
+      text: 'Awaiting demographic cross-check with NADRA before confirmation.',
+    });
+  }
+
+  return comments;
+}
+
+function generateMockData(count = 140) {
+  const rnd = seededRandom(42);
+  const rows = [];
+  const today = new Date('2026-08-31');
+  for (let i = 0; i < count; i++) {
+    const daysAgo = Math.floor(rnd() * 30);
+    const received = new Date(today);
+    received.setDate(received.getDate() - daysAgo);
+    const status = STATUSES[Math.floor(rnd() * STATUSES.length)];
+    const hrRoll = rnd();
+    const hrStatus = hrRoll < 0.65 ? 'Confirmed' : hrRoll < 0.85 ? 'Pending HR' : 'Declined';
+    const rejectionDate = new Date(received);
+    rejectionDate.setDate(rejectionDate.getDate() + 1 + Math.floor(rnd() * 3));
+    const dispatchBase = new Date(received);
+    dispatchBase.setDate(dispatchBase.getDate() + 2 + Math.floor(rnd() * 3));
+    const hrReason = hrStatus === 'Declined' ? HR_REASONS[Math.floor(rnd() * HR_REASONS.length)] : null;
+
+    rows.push({
+      reqId: `REQ-${1100 + i}`,
+      applicantName: NAMES[Math.floor(rnd() * NAMES.length)],
+      category: CATEGORIES[Math.floor(rnd() * CATEGORIES.length)],
+      functionality: FUNCTIONALITIES[Math.floor(rnd() * FUNCTIONALITIES.length)],
+      issuance: ISSUANCE_TYPES[Math.floor(rnd() * ISSUANCE_TYPES.length)],
+      frequency: FREQUENCIES[Math.floor(rnd() * FREQUENCIES.length)],
+      receivedDate: received.toISOString().slice(0, 10),
+      status,
+      trackingId: '',
+      hrStatus,
+      hrReason,
+      rejectionDate: hrStatus === 'Declined' ? rejectionDate.toISOString().slice(0, 10) : null,
+      dispatchDate: (status === 'Delivered' || status === 'Ready for Dispatch')
+        ? dispatchBase.toISOString().slice(0, 10)
+        : null,
+      comments: generateComments(rnd, received, hrStatus, hrReason),
+    });
+  }
+  return rows;
+}
+
+const MOCK_DATA = generateMockData();
+
+function formatTimestamp(iso) {
+  const date = new Date(iso);
+  const diffMin = Math.floor((Date.now() - date.getTime()) / 60000);
+  if (diffMin >= 0 && diffMin < 60) return diffMin <= 1 ? 'Just now' : `${diffMin} mins ago`;
+  if (diffMin >= 60 && diffMin < 1440) return `${Math.floor(diffMin / 60)} hours ago`;
+  return date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+// ---------------------------------------------------------------------------
+// Badge helpers
+// ---------------------------------------------------------------------------
+const STATUS_STYLES = {
+  'Received': 'bg-gray-100 text-gray-700 border-gray-300',
+  'In Process': 'bg-blue-50 text-blue-700 border-blue-200',
+  'Ready for Dispatch': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  'Delivered': 'bg-green-50 text-green-700 border-green-200',
+  'Pending': 'bg-amber-50 text-amber-700 border-amber-200',
+  'Rejected': 'bg-red-50 text-red-700 border-red-200',
+};
+
+const CATEGORY_STYLES = {
+  'Conventional': 'bg-slate-100 text-slate-700 border-slate-300',
+  'Islamic': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+};
+
+const FUNC_STYLES = {
+  'HF': 'bg-cyan-50 text-cyan-700 border-cyan-200',
+  'RF': 'bg-purple-50 text-purple-700 border-purple-200',
+};
+
+const HR_STATUS_STYLES = {
+  'Confirmed': 'bg-green-50 text-green-700 border-green-200',
+  'Pending HR': 'bg-gray-100 text-gray-600 border-gray-300',
+  'Declined': 'bg-red-50 text-red-700 border-red-300',
+};
+
+function Badge({ label, className }) {
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${className}`}>
+      {label}
+    </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Filter bar
+// ---------------------------------------------------------------------------
+function SelectField({ value, onChange, options, placeholder }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="h-8 text-xs rounded-md border border-gray-300 bg-white px-2 pr-6 text-gray-700 focus:outline-none focus:ring-2 focus:ring-navy-600/30 focus:border-navy-600"
+    >
+      <option value="All">{placeholder || 'All'}</option>
+      {options.map((o) => (
+        <option key={o} value={o}>{o}</option>
+      ))}
+    </select>
+  );
+}
+
+function FilterBar({ icons, filters, setFilters, onReset, onExport }) {
+  const { Download, RotateCcw, Calendar } = icons;
+  const set = (key) => (val) => setFilters((f) => ({ ...f, [key]: val }));
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm">
+      <input
+        type="text"
+        value={filters.reqId}
+        onChange={(e) => set('reqId')(e.target.value)}
+        placeholder="Search REQ ID…"
+        className="h-8 w-36 text-xs rounded-md border border-gray-300 px-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-navy-600/30 focus:border-navy-600"
+      />
+
+      <div className="w-px h-6 bg-gray-200 mx-1" />
+
+      <div className="flex items-center gap-1.5">
+        <Calendar size={14} className="text-gray-400" />
+        <input
+          type="date"
+          value={filters.fromDate}
+          onChange={(e) => set('fromDate')(e.target.value)}
+          className="h-8 text-xs rounded-md border border-gray-300 px-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-navy-600/30 focus:border-navy-600"
+        />
+        <span className="text-xs text-gray-400">to</span>
+        <input
+          type="date"
+          value={filters.toDate}
+          onChange={(e) => set('toDate')(e.target.value)}
+          className="h-8 text-xs rounded-md border border-gray-300 px-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-navy-600/30 focus:border-navy-600"
+        />
+      </div>
+
+      <div className="w-px h-6 bg-gray-200 mx-1" />
+
+      <SelectField value={filters.frequency} onChange={set('frequency')} options={FREQUENCIES} placeholder="Frequency: All" />
+      <SelectField value={filters.status} onChange={set('status')} options={STATUSES} placeholder="Status: All" />
+      <SelectField value={filters.category} onChange={set('category')} options={CATEGORIES} placeholder="Category: All" />
+      <SelectField value={filters.functionality} onChange={set('functionality')} options={FUNCTIONALITIES} placeholder="Functionality: All" />
+      <SelectField value={filters.issuance} onChange={set('issuance')} options={ISSUANCE_TYPES} placeholder="Issuance: All" />
+
+      <div className="flex-1" />
+
+      <button
+        onClick={onReset}
+        className="h-8 inline-flex items-center gap-1.5 px-3 rounded-md border border-gray-300 text-xs font-medium text-gray-600 hover:bg-gray-50 transition"
+      >
+        <RotateCcw size={13} /> Reset Filters
+      </button>
+      <button
+        onClick={onExport}
+        className="h-8 inline-flex items-center gap-1.5 px-3 rounded-md bg-navy-700 text-white text-xs font-medium hover:bg-navy-600 transition shadow-sm"
+      >
+        <Download size={13} /> Download Print Batch (CSV)
+      </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Metric cards
+// ---------------------------------------------------------------------------
+function MetricCard({ icon: Icon, label, value, accent, active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex-1 bg-white border rounded-lg px-4 py-3 shadow-sm flex items-center gap-3 text-left transition
+        ${active ? `border-transparent ring-2 ${accent.ring} bg-opacity-100` : 'border-gray-200 hover:border-gray-300'}`}
+    >
+      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${accent.bg}`}>
+        <Icon size={17} className={accent.text} />
+      </div>
+      <div className="min-w-0">
+        <div className="text-[11px] font-medium text-gray-500 truncate">{label}</div>
+        <div className="text-xl font-bold text-gray-800 leading-tight">{value}</div>
+      </div>
+    </button>
+  );
+}
+
+function MetricRow({ icons, data, activeMetric, onToggleMetric }) {
+  const { Inbox, Printer, PackageCheck, AlertTriangle, AlertOctagon } = icons;
+  const received = data.length;
+  const inProcess = data.filter((d) => d.status === 'In Process' || d.status === 'Ready for Dispatch').length;
+  const delivered = data.filter((d) => d.status === 'Delivered').length;
+  const pending = data.filter((d) => d.status === 'Pending' || d.status === 'Rejected').length;
+  const hrDeclined = data.filter((d) => d.hrStatus === 'Declined').length;
+
+  return (
+    <div className="flex gap-3">
+      <MetricCard
+        icon={Inbox} label="Requests Received" value={received}
+        accent={{ bg: 'bg-blue-50', text: 'text-blue-600', ring: 'ring-blue-400' }}
+        active={activeMetric === 'received'} onClick={() => onToggleMetric('received')}
+      />
+      <MetricCard
+        icon={AlertTriangle} label="Pending / Overdue" value={pending}
+        accent={{ bg: 'bg-amber-50', text: 'text-amber-600', ring: 'ring-amber-400' }}
+        active={activeMetric === 'pending'} onClick={() => onToggleMetric('pending')}
+      />
+      <MetricCard
+        icon={Printer} label="In Process / Printing" value={inProcess}
+        accent={{ bg: 'bg-indigo-50', text: 'text-indigo-600', ring: 'ring-indigo-400' }}
+        active={activeMetric === 'inProcess'} onClick={() => onToggleMetric('inProcess')}
+      />
+      <MetricCard
+        icon={PackageCheck} label="Delivered" value={delivered}
+        accent={{ bg: 'bg-green-50', text: 'text-green-600', ring: 'ring-green-400' }}
+        active={activeMetric === 'delivered'} onClick={() => onToggleMetric('delivered')}
+      />
+      <MetricCard
+        icon={AlertOctagon} label="UBL Declined" value={hrDeclined}
+        accent={{ bg: 'bg-red-50', text: 'text-red-600', ring: 'ring-red-400' }}
+        active={activeMetric === 'hrDeclined'} onClick={() => onToggleMetric('hrDeclined')}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Toolbar (bulk actions)
+// ---------------------------------------------------------------------------
+function Toolbar({ icons, selectedCount, onBulkUpdate }) {
+  const { ListChecks } = icons;
+  const [bulkStatus, setBulkStatus] = useState('In Process');
+
+  return (
+    <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm">
+      <div className="flex items-center gap-2 text-xs text-gray-600">
+        <ListChecks size={14} className="text-gray-400" />
+        <span>{selectedCount} selected</span>
+        <select
+          value={bulkStatus}
+          onChange={(e) => setBulkStatus(e.target.value)}
+          className="h-7 text-xs rounded-md border border-gray-300 bg-white px-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-navy-600/30"
+        >
+          <option value="In Process">In Process</option>
+          <option value="Delivered">Delivered</option>
+        </select>
+        <button
+          disabled={selectedCount === 0}
+          onClick={() => onBulkUpdate(bulkStatus)}
+          className="h-7 px-3 rounded-md bg-navy-700 text-white text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-navy-600 transition"
+        >
+          Bulk Update Status
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Table
+// ---------------------------------------------------------------------------
+function StatusActions({ icons, row, onChangeStatus }) {
+  const { ChevronDown } = icons;
+  return (
+    <div className="relative inline-block">
+      <select
+        value={row.status}
+        onChange={(e) => onChangeStatus(row.reqId, e.target.value)}
+        className="h-7 text-[11px] rounded-md border border-gray-300 bg-white pl-2 pr-6 text-gray-700 focus:outline-none focus:ring-2 focus:ring-navy-600/30 appearance-none"
+      >
+        {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+      </select>
+      <ChevronDown size={11} className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400" />
+    </div>
+  );
+}
+
+function ReqIdColumnFilter({ icons, allIds, selected, onChange }) {
+  const { Filter } = icons;
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const isFiltered = selected.size < allIds.length;
+  const filteredIds = allIds.filter((id) => id.toLowerCase().includes(search.toLowerCase()));
+
+  const toggleValue = (id) => {
+    onChange((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllFiltered = () => {
+    onChange((prev) => {
+      const next = new Set(prev);
+      filteredIds.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+
+  const clearAllFiltered = () => {
+    onChange((prev) => {
+      const next = new Set(prev);
+      filteredIds.forEach((id) => next.delete(id));
+      return next;
+    });
+  };
+
+  return (
+    <span className="relative inline-block ml-1 normal-case" ref={ref} onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={isFiltered ? 'text-navy-600' : 'text-gray-400 hover:text-gray-600'}
+      >
+        <Filter size={11} />
+      </button>
+      {open && (
+        <div className="absolute z-20 top-5 left-0 w-44 bg-white border border-gray-200 rounded-md shadow-lg p-2 font-normal text-gray-700 normal-case">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search…"
+            className="w-full h-7 text-[11px] rounded border border-gray-300 px-1.5 mb-1.5 focus:outline-none focus:ring-2 focus:ring-navy-600/30"
+          />
+          <div className="flex items-center gap-2 px-1 pb-1.5">
+            <button type="button" onClick={selectAllFiltered} className="text-[11px] text-navy-600 hover:underline">Select All</button>
+            <span className="text-gray-300">|</span>
+            <button type="button" onClick={clearAllFiltered} className="text-[11px] text-navy-600 hover:underline">Clear All</button>
+          </div>
+          <div className="border-t border-gray-100 mb-1" />
+          <div className="max-h-40 overflow-y-auto">
+            {filteredIds.map((id) => (
+              <label key={id} className="flex items-center gap-1.5 px-1 py-1 text-[11px] cursor-pointer hover:bg-gray-50 rounded">
+                <input type="checkbox" checked={selected.has(id)} onChange={() => toggleValue(id)} />
+                {id}
+              </label>
+            ))}
+            {filteredIds.length === 0 && (
+              <div className="px-1 py-1 text-[11px] text-gray-400">No matches</div>
+            )}
+          </div>
+        </div>
+      )}
+    </span>
+  );
+}
+
+function HrColumnFilter({ icons, selected, onChange }) {
+  const { Filter } = icons;
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const isFiltered = selected.size < HR_STATUSES.length;
+
+  const toggleValue = (val) => {
+    onChange((prev) => {
+      const next = new Set(prev);
+      next.has(val) ? next.delete(val) : next.add(val);
+      return next;
+    });
+  };
+
+  const selectAll = () => onChange(new Set(HR_STATUSES));
+  const clearAll = () => onChange(new Set());
+
+  return (
+    <span className="relative inline-block ml-1 normal-case" ref={ref} onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={isFiltered ? 'text-navy-600' : 'text-gray-400 hover:text-gray-600'}
+      >
+        <Filter size={11} />
+      </button>
+      {open && (
+        <div className="absolute z-20 top-5 left-0 w-40 bg-white border border-gray-200 rounded-md shadow-lg p-2 font-normal text-gray-700 normal-case">
+          <div className="flex items-center gap-2 px-1 pb-1.5">
+            <button type="button" onClick={selectAll} className="text-[11px] text-navy-600 hover:underline">Select All</button>
+            <span className="text-gray-300">|</span>
+            <button type="button" onClick={clearAll} className="text-[11px] text-navy-600 hover:underline">Clear All</button>
+          </div>
+          <div className="border-t border-gray-100 mb-1" />
+          {HR_STATUSES.map((s) => (
+            <label key={s} className="flex items-center gap-1.5 px-1 py-1 text-[11px] cursor-pointer hover:bg-gray-50 rounded">
+              <input type="checkbox" checked={selected.has(s)} onChange={() => toggleValue(s)} />
+              {s}
+            </label>
+          ))}
+        </div>
+      )}
+    </span>
+  );
+}
+
+function RequestsTable({ icons, rows, selected, onToggleRow, onToggleAll, onTrackingIdChange, onChangeStatus, onRowClick, hrColumnFilter, onHrColumnFilterChange, allReqIds, reqIdColumnFilter, onReqIdColumnFilterChange }) {
+  const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.reqId));
+
+  return (
+    <div className="min-h-0 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+      <div className="overflow-auto max-h-[calc(100vh-280px)]">
+        <table className="w-full text-xs border-collapse">
+          <thead className="sticky top-0 z-10">
+            <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-[11px] uppercase tracking-wide">
+              <th className="px-3 py-2 text-left w-8">
+                <input type="checkbox" checked={allSelected} onChange={(e) => onToggleAll(e.target.checked)} className="cursor-pointer" />
+              </th>
+              <th className="px-3 py-2 text-left">
+                <span className="inline-flex items-center">
+                  Req ID
+                  <ReqIdColumnFilter icons={icons} allIds={allReqIds} selected={reqIdColumnFilter} onChange={onReqIdColumnFilterChange} />
+                </span>
+              </th>
+              <th className="px-3 py-2 text-left">Applicant</th>
+              <th className="px-3 py-2 text-left">Category</th>
+              <th className="px-3 py-2 text-left">Functionality</th>
+              <th className="px-3 py-2 text-left">Issuance</th>
+              <th className="px-3 py-2 text-left">Received</th>
+              <th className="px-3 py-2 text-left">Status</th>
+              <th className="px-3 py-2 text-left">
+                <span className="inline-flex items-center">
+                  HR Verification
+                  <HrColumnFilter icons={icons} selected={hrColumnFilter} onChange={onHrColumnFilterChange} />
+                </span>
+              </th>
+              <th className="px-3 py-2 text-left">Tracking ID</th>
+              <th className="px-3 py-2 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, idx) => (
+              <tr
+                key={row.reqId}
+                onClick={() => onRowClick(row)}
+                className={`border-b border-gray-100 hover:bg-slate-50 cursor-pointer transition ${idx % 2 === 1 ? 'bg-gray-50/40' : ''}`}
+              >
+                <td className="px-3 py-1.5" onClick={(e) => e.stopPropagation()}>
+                  <input type="checkbox" checked={selected.has(row.reqId)} onChange={() => onToggleRow(row.reqId)} className="cursor-pointer" />
+                </td>
+                <td className="px-3 py-1.5 font-medium text-navy-700">{row.reqId}</td>
+                <td className="px-3 py-1.5 text-gray-700">{row.applicantName}</td>
+                <td className="px-3 py-1.5"><Badge label={row.category} className={CATEGORY_STYLES[row.category]} /></td>
+                <td className="px-3 py-1.5"><Badge label={row.functionality} className={FUNC_STYLES[row.functionality]} /></td>
+                <td className="px-3 py-1.5 text-gray-600">{row.issuance}</td>
+                <td className="px-3 py-1.5 text-gray-600">{row.receivedDate}</td>
+                <td className="px-3 py-1.5"><Badge label={row.status} className={STATUS_STYLES[row.status]} /></td>
+                <td className="px-3 py-1.5"><Badge label={row.hrStatus} className={HR_STATUS_STYLES[row.hrStatus]} /></td>
+                <td className="px-3 py-1.5" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="text"
+                    value={row.trackingId}
+                    placeholder="Enter tracking ID"
+                    onChange={(e) => onTrackingIdChange(row.reqId, e.target.value)}
+                    className="h-7 w-28 text-[11px] rounded-md border border-gray-300 px-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-navy-600/30"
+                  />
+                </td>
+                <td className="px-3 py-1.5" onClick={(e) => e.stopPropagation()}>
+                  <StatusActions icons={icons} row={row} onChangeStatus={onChangeStatus} />
+                </td>
+              </tr>
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={11} className="px-3 py-10 text-center text-gray-400">No requests match the selected filters.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Side panel (drawer) — inspection + live comment/audit feed
+// ---------------------------------------------------------------------------
+function SidePanel({ icons, row, open, onClose, onInitiateReprint, onPostComment }) {
+  const { X, AlertOctagon, Printer, Send, MessageSquare } = icons;
+  const [draft, setDraft] = useState('');
+
+  if (!row) return null;
+
+  const sortedComments = [...row.comments].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+  const handleSend = () => {
+    const text = draft.trim();
+    if (!text) return;
+    onPostComment(row.reqId, text);
+    setDraft('');
+  };
+
+  return (
+    <>
+      <div
+        onClick={onClose}
+        className={`fixed inset-0 z-40 bg-black/30 transition-opacity duration-300 ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+      />
+      <div
+        className={`fixed top-0 right-0 z-50 h-full w-[420px] max-w-full bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : 'translate-x-full'}`}
+      >
+        <div className="flex items-start justify-between px-4 py-3 border-b border-gray-200 shrink-0">
+          <div>
+            <div className="text-sm font-bold text-navy-700">{row.reqId}</div>
+            <div className="text-xs text-gray-500">{row.applicantName}</div>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <Badge label={row.status} className={STATUS_STYLES[row.status]} />
+              <Badge label={row.hrStatus} className={HR_STATUS_STYLES[row.hrStatus]} />
+            </div>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 text-xs">
+          <div>
+            <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Card Details</div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-gray-400 mb-0.5">Category</div>
+                <Badge label={row.category} className={CATEGORY_STYLES[row.category]} />
+              </div>
+              <div>
+                <div className="text-gray-400 mb-0.5">Functionality</div>
+                <Badge label={row.functionality} className={FUNC_STYLES[row.functionality]} />
+              </div>
+              <div>
+                <div className="text-gray-400 mb-0.5">Courier Waybill ID</div>
+                <div className="font-medium text-gray-800">{row.trackingId || 'Not assigned'}</div>
+              </div>
+              <div>
+                <div className="text-gray-400 mb-0.5">Dispatch Date</div>
+                <div className="font-medium text-gray-800">{row.dispatchDate || '—'}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+            <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">HR Verification Status</div>
+            <Badge label={row.hrStatus} className={HR_STATUS_STYLES[row.hrStatus]} />
+          </div>
+
+          <div>
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              <MessageSquare size={12} />
+              Audit &amp; Comments (Synced from UBL Dashboard)
+            </div>
+            <div className="space-y-2">
+              {sortedComments.map((c) => (
+                <div
+                  key={c.id}
+                  className={`rounded-md border px-3 py-2 ${c.role === 'Vendor Dashboard' ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}
+                >
+                  <div className="flex items-center justify-between mb-1 gap-2">
+                    <span className="font-semibold text-gray-700">{c.author}</span>
+                    <span className="text-[10px] text-gray-400 shrink-0">{formatTimestamp(c.timestamp)}</span>
+                  </div>
+                  <div className="text-gray-600">{c.text}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-200 px-4 py-3 space-y-2 shrink-0">
+          {row.hrStatus === 'Declined' && (
+            <button
+              onClick={() => onInitiateReprint(row.reqId)}
+              className="w-full h-9 inline-flex items-center justify-center gap-1.5 rounded-md bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition"
+            >
+              <Printer size={14} /> Initiate Reprint Request
+            </button>
+          )}
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
+              placeholder="Reply to UBL dashboard…"
+              className="flex-1 h-8 text-xs rounded-md border border-gray-300 px-2 focus:outline-none focus:ring-2 focus:ring-navy-600/30"
+            />
+            <button
+              onClick={handleSend}
+              className="h-8 w-8 flex items-center justify-center rounded-md bg-navy-700 text-white hover:bg-navy-600 transition shrink-0"
+            >
+              <Send size={13} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// CSV export
+// ---------------------------------------------------------------------------
+function exportCsv(rows) {
+  const headers = ['Req ID','Applicant','Category','Functionality','Issuance','Received Date','Status','HR Verification','Tracking ID'];
+  const lines = [headers.join(',')];
+  rows.forEach((r) => {
+    lines.push([r.reqId, r.applicantName, r.category, r.functionality, r.issuance, r.receivedDate, r.status, r.hrStatus, r.trackingId]
+      .map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','));
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `print-batch-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ---------------------------------------------------------------------------
+// App
+// ---------------------------------------------------------------------------
+const DEFAULT_FILTERS = {
+  reqId: '',
+  fromDate: '',
+  toDate: '',
+  frequency: 'All',
+  status: 'All',
+  category: 'All',
+  functionality: 'All',
+  issuance: 'All',
+};
+
+const METRIC_PREDICATES = {
+  received: () => true,
+  inProcess: (r) => r.status === 'In Process' || r.status === 'Ready for Dispatch',
+  delivered: (r) => r.status === 'Delivered',
+  pending: (r) => r.status === 'Pending' || r.status === 'Rejected',
+  hrDeclined: (r) => r.hrStatus === 'Declined',
+};
+
+function VendorDashboard({ icons }) {
+  const { ShieldCheck } = icons;
+  const [data, setData] = useState(MOCK_DATA);
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [selected, setSelected] = useState(new Set());
+  const [activeMetric, setActiveMetric] = useState(null);
+  const [hrColumnFilter, setHrColumnFilter] = useState(new Set(HR_STATUSES));
+  const [reqIdColumnFilter, setReqIdColumnFilter] = useState(() => new Set(MOCK_DATA.map((r) => r.reqId)));
+  const [selectedReqId, setSelectedReqId] = useState(null);
+  const [panelOpen, setPanelOpen] = useState(false);
+
+  const allReqIds = useMemo(() => data.map((r) => r.reqId), [data]);
+
+  const selectedRow = useMemo(
+    () => data.find((r) => r.reqId === selectedReqId) || null,
+    [data, selectedReqId]
+  );
+
+  const filteredRows = useMemo(() => {
+    return data.filter((r) => {
+      if (filters.reqId && !r.reqId.toLowerCase().includes(filters.reqId.toLowerCase())) return false;
+      if (filters.fromDate && r.receivedDate < filters.fromDate) return false;
+      if (filters.toDate && r.receivedDate > filters.toDate) return false;
+      if (filters.frequency !== 'All' && r.frequency !== filters.frequency) return false;
+      if (filters.status !== 'All' && r.status !== filters.status) return false;
+      if (filters.category !== 'All' && r.category !== filters.category) return false;
+      if (filters.functionality !== 'All' && r.functionality !== filters.functionality) return false;
+      if (filters.issuance !== 'All' && r.issuance !== filters.issuance) return false;
+      if (!hrColumnFilter.has(r.hrStatus)) return false;
+      if (!reqIdColumnFilter.has(r.reqId)) return false;
+      return true;
+    });
+  }, [data, filters, hrColumnFilter, reqIdColumnFilter]);
+
+  const visibleRows = useMemo(() => {
+    if (!activeMetric) return filteredRows;
+    return filteredRows.filter(METRIC_PREDICATES[activeMetric]);
+  }, [filteredRows, activeMetric]);
+
+  const handleToggleMetric = useCallback((key) => {
+    setActiveMetric((prev) => (prev === key ? null : key));
+  }, []);
+
+  const handleReset = useCallback(() => {
+    setFilters(DEFAULT_FILTERS);
+    setActiveMetric(null);
+    setHrColumnFilter(new Set(HR_STATUSES));
+    setReqIdColumnFilter(new Set(MOCK_DATA.map((r) => r.reqId)));
+  }, []);
+
+  const handleToggleRow = useCallback((reqId) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(reqId) ? next.delete(reqId) : next.add(reqId);
+      return next;
+    });
+  }, []);
+
+  const handleToggleAll = useCallback((checked) => {
+    setSelected(checked ? new Set(visibleRows.map((r) => r.reqId)) : new Set());
+  }, [visibleRows]);
+
+  const handleTrackingIdChange = useCallback((reqId, value) => {
+    setData((prev) => prev.map((r) => (r.reqId === reqId ? { ...r, trackingId: value } : r)));
+  }, []);
+
+  const handleChangeStatus = useCallback((reqId, status) => {
+    setData((prev) => prev.map((r) => (r.reqId === reqId ? { ...r, status } : r)));
+  }, []);
+
+  const handleBulkUpdate = useCallback((status) => {
+    setData((prev) => prev.map((r) => (selected.has(r.reqId) ? { ...r, status } : r)));
+    setSelected(new Set());
+  }, [selected]);
+
+  const handleRowClick = useCallback((row) => {
+    setSelectedReqId(row.reqId);
+    setPanelOpen(true);
+  }, []);
+
+  const handleClosePanel = useCallback(() => setPanelOpen(false), []);
+
+  const handlePostComment = useCallback((reqId, text) => {
+    setData((prev) => prev.map((r) => (r.reqId === reqId ? {
+      ...r,
+      comments: [...r.comments, {
+        id: `c-${Date.now()}`,
+        author: VENDOR_AUTHOR,
+        role: 'Vendor Dashboard',
+        timestamp: new Date().toISOString(),
+        text,
+      }],
+    } : r)));
+  }, []);
+
+  const handleInitiateReprint = useCallback((reqId) => {
+    setData((prev) => prev.map((r) => (r.reqId === reqId ? {
+      ...r,
+      status: 'In Process',
+      hrStatus: 'Pending HR',
+      comments: [...r.comments, {
+        id: `c-${Date.now()}`,
+        author: VENDOR_AUTHOR,
+        role: 'Vendor Dashboard',
+        timestamp: new Date().toISOString(),
+        text: 'Reprint request initiated by vendor.',
+      }],
+    } : r)));
+  }, []);
+
+  return (
+    <div className="h-screen w-screen flex flex-col bg-[#F5F7FA] overflow-hidden">
+      <header className="h-11 bg-navy-700 flex items-center justify-between px-4 shrink-0 shadow-sm">
+        <div className="flex items-center gap-2 text-white font-bold text-sm">
+          <ShieldCheck size={18} />
+          UBL — Vendor Card Print Dashboard
+        </div>
+        <div className="text-white/70 text-[11px]">Vendor: TCS Print Facility · 2026-08-31</div>
+      </header>
+
+      <main className="flex-1 min-h-0 flex flex-col gap-3 p-3 overflow-hidden">
+        <FilterBar
+          icons={icons}
+          filters={filters}
+          setFilters={setFilters}
+          onReset={handleReset}
+          onExport={() => exportCsv(filteredRows)}
+        />
+
+        <MetricRow
+          icons={icons}
+          data={filteredRows}
+          activeMetric={activeMetric}
+          onToggleMetric={handleToggleMetric}
+        />
+
+        <Toolbar
+          icons={icons}
+          selectedCount={selected.size}
+          onBulkUpdate={handleBulkUpdate}
+        />
+
+        <RequestsTable
+          icons={icons}
+          rows={visibleRows}
+          selected={selected}
+          onToggleRow={handleToggleRow}
+          onToggleAll={handleToggleAll}
+          onTrackingIdChange={handleTrackingIdChange}
+          onChangeStatus={handleChangeStatus}
+          onRowClick={handleRowClick}
+          hrColumnFilter={hrColumnFilter}
+          onHrColumnFilterChange={setHrColumnFilter}
+          allReqIds={allReqIds}
+          reqIdColumnFilter={reqIdColumnFilter}
+          onReqIdColumnFilterChange={setReqIdColumnFilter}
+        />
+      </main>
+
+      <SidePanel
+        icons={icons}
+        row={selectedRow}
+        open={panelOpen}
+        onClose={handleClosePanel}
+        onInitiateReprint={handleInitiateReprint}
+        onPostComment={handlePostComment}
+      />
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<VendorDashboard icons={ICONS} />);
+</script>
+</body>
+</html>

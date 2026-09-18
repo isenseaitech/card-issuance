@@ -1,0 +1,146 @@
+        /* --- Shared Preview Modal ------------------------------------- */
+        .pv-body {
+            display: flex;
+            gap: 18px;
+            padding: 16px;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .pv-image-col {
+            flex: 1.4;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .pv-image-wrap {
+            flex: 1;
+            background: #0F1B2E;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .pv-image-wrap img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+        }
+
+        .pv-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding-top: 10px;
+            flex-shrink: 0;
+        }
+
+        .pv-tool-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: 1px solid #E5E7EB;
+            background: #ffffff;
+            color: #374151;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            transition: background 0.15s ease;
+        }
+        .pv-tool-btn:hover { background: #F3F4F6; }
+
+        .pv-nav-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 8px;
+            flex-shrink: 0;
+        }
+
+        .pv-nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #F3F4F6;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #374151;
+            cursor: pointer;
+        }
+        .pv-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .pv-counter { font-size: 0.7rem; color: #6B7280; font-weight: 600; }
+
+        .pv-info-col {
+            width: 260px;
+            flex-shrink: 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .pv-info-section-title {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #163B70;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid #E5E7EB;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+        }
+
+        .pv-info-row { display: flex; justify-content: space-between; gap: 8px; font-size: 0.74rem; padding: 3px 0; }
+        .pv-info-row span:first-child { color: #6B7280; }
+        .pv-info-row span:last-child { color: #1F2937; font-weight: 600; text-align: right; }
+
+        .pv-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+            padding-top: 10px;
+        }
+        .pv-btn-approve, .pv-btn-reject {
+            flex: 1;
+            border: none;
+            border-radius: 6px;
+            padding: 9px 0;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: #ffffff;
+            cursor: pointer;
+        }
+        .pv-btn-approve { background: #2E7D32; }
+        .pv-btn-approve:hover { background: #256428; }
+        .pv-btn-reject { background: #C62828; }
+        .pv-btn-reject:hover { background: #a82121; }
+
+        @media (max-width: 760px) {
+            .pv-body { flex-direction: column; }
+            .pv-info-col { width: 100%; }
+            .dr-summary-row { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* --- Reject Reason dialog -------------------------------------- */
+        .rr-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+        .rr-field label { font-size: 0.74rem; font-weight: 700; color: #334155; }
+        .rr-field select, .rr-field textarea {
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 7px 9px;
+            font-size: 0.78rem;
+            font-family: inherit;
+        }
+        .rr-field textarea { resize: vertical; min-height: 60px; }
+        .rr-hint { font-size: 0.68rem; color: #C62828; }

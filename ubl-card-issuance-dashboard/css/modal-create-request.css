@@ -1,0 +1,501 @@
+        /* ===================================================================
+           Create Request Modal - Card Issuance Form
+           Deliberately uses fixed light colors (not theme CSS vars) since the
+           spec calls for a white enterprise-form surface regardless of the
+           dashboard's light/dark mode.
+           =================================================================== */
+        .cr-modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .cr-modal-backdrop.open { display: flex; opacity: 1; }
+
+        .cr-modal {
+            position: relative;
+            width: 950px;
+            max-width: 100%;
+            height: 720px;
+            max-height: 90vh;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.94) translateY(8px);
+            opacity: 0;
+            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.18s ease;
+        }
+
+        .cr-modal-backdrop.open .cr-modal {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        .cr-modal-header {
+            background: var(--brand-primary, #163B70);
+            color: #ffffff;
+            padding: 16px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .cr-modal-header h2 {
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .cr-modal-close {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease;
+        }
+
+        .cr-modal-close:hover { background: rgba(255, 255, 255, 0.3); }
+
+        .cr-modal-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cr-tab-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            padding: 3px;
+        }
+
+        .cr-tab-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.85);
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .cr-tab-btn:hover { background: rgba(255, 255, 255, 0.14); }
+        .cr-tab-btn.active { background: #ffffff; color: #163B70; }
+
+        .cr-modal-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            padding: 16px 26px;
+            overflow-y: auto;
+            color: #1F2937;
+        }
+
+        .cr-section-title {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #163B70;
+            margin: 0 0 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .cr-desc-list {
+            list-style: disc;
+            margin: 0 0 14px 18px;
+            padding: 0;
+            font-size: 0.72rem;
+            line-height: 1.5;
+            color: #4B5563;
+        }
+
+        .cr-desc-list li { margin-bottom: 4px; }
+
+        .cr-field-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px 14px;
+            margin-bottom: 12px;
+        }
+
+        .cr-field { display: flex; flex-direction: column; gap: 4px; }
+        .cr-field.cr-full { grid-column: 1 / -1; }
+        .cr-field.cr-span2 { grid-column: span 2; }
+
+        .cr-field label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        .cr-field label .cr-required { color: #C62828; margin-left: 2px; }
+
+        .cr-field input,
+        .cr-field select {
+            height: 32px;
+            padding: 5px 9px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #ffffff;
+            font-size: 12.5px;
+            font-family: inherit;
+            font-weight: 400;
+            line-height: 1.4;
+            color: #1e293b;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .cr-field input::placeholder,
+        .cr-field select::placeholder,
+        .cr-field textarea::placeholder {
+            font-size: 12.5px;
+            font-weight: 400;
+            color: #94a3b8;
+            opacity: 1;
+        }
+
+        .cr-field input:focus,
+        .cr-field select:focus,
+        .cr-field textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .cr-field input:disabled,
+        .cr-field select:disabled,
+        .cr-field textarea:disabled,
+        .cr-field input[readonly],
+        .cr-field select[readonly],
+        .cr-field textarea[readonly] {
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+
+        .cr-readonly-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .cr-readonly-wrap input[readonly] {
+            width: 100%;
+            padding-right: 28px;
+        }
+
+        .cr-readonly-wrap input[readonly]:focus {
+            box-shadow: none;
+            border-color: #e2e8f0;
+        }
+
+        .cr-readonly-wrap i.fa-lock {
+            position: absolute;
+            right: 9px;
+            font-size: 0.65rem;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        .cr-field textarea {
+            height: 32px;
+            padding: 5px 9px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            resize: vertical;
+            font: inherit;
+            font-size: 12.5px;
+            font-weight: 400;
+            color: #1e293b;
+            line-height: 1.4;
+            background: #ffffff;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .cr-field.cr-invalid input,
+        .cr-field.cr-invalid select,
+        .cr-field.cr-invalid textarea {
+            border-color: #C62828;
+            box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.12);
+        }
+
+        .cr-error-msg {
+            display: none;
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: #C62828;
+        }
+
+        .cr-field.cr-invalid .cr-error-msg { display: block; }
+
+        .cr-dropzone {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            margin: 0 auto;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 8px 16px;
+            text-align: center;
+            cursor: pointer;
+            background: #F8FAFC;
+            overflow: hidden;
+            transition: border-color 0.15s ease, background 0.15s ease;
+        }
+
+        .cr-dropzone:hover, .cr-dropzone.cr-dragover {
+            border-color: #1E5AA8;
+            background: #EEF3FA;
+        }
+
+        .cr-dropzone input[type="file"] { display: none; }
+
+        .cr-dropzone i {
+            font-size: 1rem;
+            color: #1E5AA8;
+            margin-bottom: 0;
+            display: block;
+        }
+
+        .cr-dropzone-copy { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+        .cr-dropzone-text { font-size: 0.72rem; font-weight: 600; color: #1F2937; }
+        .cr-dropzone-hint { font-size: 0.62rem; color: #6B7280; margin-top: 1px; }
+
+        .cr-file-list { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+
+        .cr-file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            background: #F3F4F6;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 0.72rem;
+            color: #1F2937;
+        }
+
+        .cr-file-item i.fa-file-lines { color: #1E5AA8; }
+        .cr-file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cr-file-size { color: #6B7280; flex-shrink: 0; }
+        .cr-file-remove {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6B7280;
+            display: flex;
+            align-items: center;
+            padding: 2px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .cr-file-remove:hover { color: #C62828; background: #FEE2E2; }
+
+        /* ===================================================================
+           Card Preview - front/back UBL employee card
+           Visual reference: physical UBL ID card sample (cardfront/cardback).
+           Portrait CR80-style proportions (~54mm x 86mm -> aspect-ratio 0.63).
+           Toggled via the "Form" / "Card Preview" header tabs; fills the same
+           full-size content area as the form body (not a side overlay).
+           =================================================================== */
+        .cid-preview-panel {
+            display: none;
+            flex: 1 1 auto;
+            min-height: 0;
+            flex-direction: column;
+            overflow-y: auto;
+            background: #ffffff;
+        }
+
+        .cid-preview-panel.open { display: flex; }
+
+        .cid-preview-row {
+            display: flex;
+            gap: 22px;
+            flex-wrap: wrap;
+            align-content: center;
+            justify-content: center;
+            padding: 32px 24px;
+            flex: 1;
+        }
+
+        .cid-card {
+            width: 210px;
+            aspect-ratio: 0.63;
+            flex-shrink: 0;
+            border-radius: 14px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+            border: 1px solid #E2E8F0;
+            font-family: inherit;
+        }
+
+        /* --- Front face ------------------------------------------------- */
+        .cid-card-front {
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .cid-logo-badge {
+            position: relative;
+            align-self: flex-start;
+            margin: 0 0 0 5px;
+            width: 92px;
+            height: 60px;
+            box-sizing: border-box;
+            color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            line-height: 0.80;
+        }
+
+        .cid-logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .cid-logo-tagline {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 5px;
+            text-align: center;
+            font-size: 0.36rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .cid-name {
+            margin-top: 16px;
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: #1E5AA8;
+            text-align: center;
+            padding: 0 8px;
+        }
+
+        .cid-photo {
+            margin-top: auto;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            background: #EEF1F5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-top: 1px solid #E5E7EB;
+        }
+
+        .cid-photo i { font-size: 2.4rem; color: #9CA3AF; }
+
+        /* --- Back face ---------------------------------------------------- */
+        .cid-card-back {
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cid-back-top {
+            padding: 10px 12px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            flex: 1;
+        }
+
+        .cid-back-row { display: flex; justify-content: space-between; gap: 8px; }
+
+        .cid-back-field { display: flex; flex-direction: column; gap: 1px; }
+        .cid-back-right { text-align: right; align-items: flex-end; }
+
+        .cid-back-label { font-size: 0.42rem; font-weight: 700; color: #374151; }
+        .cid-back-value { font-size: 0.5rem; font-weight: 600; color: #111827; }
+
+        .cid-back-sign {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            padding-top: 6px;
+        }
+
+        .cid-sign-script {
+            font-family: 'Brush Script MT', cursive;
+            font-size: 0.8rem;
+            color: #1E5AA8;
+            border-bottom: 1px solid #9CA3AF;
+            padding: 0 4px 2px;
+        }
+
+        .cid-sign-label { font-size: 0.36rem; color: #6B7280; margin-top: 2px; }
+
+        .cid-back-bottom {
+            background: #1E5AA8;
+            color: #ffffff;
+            position: relative;
+            flex: 1;
+            padding: 10px 12px;
+            overflow: hidden;
+        }
+
+        .cid-building-icon {
+            position: absolute;
+            right: -8px;
+            bottom: -8px;
+            font-size: 3.4rem;
+            color: rgba(255, 255, 255, 0.16);
+        }
+
+        .cid-back-return { font-size: 0.44rem; line-height: 1.55; position: relative; z-index: 1; }
+        .cid-back-phone { font-size: 0.44rem; margin-top: 8px; font-weight: 600; position: relative; z-index: 1; }
+
+        @media (max-width: 640px) {
+            .cid-card { width: 180px; }
+        }
+

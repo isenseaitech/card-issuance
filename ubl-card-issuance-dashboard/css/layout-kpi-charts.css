@@ -1,0 +1,498 @@
+        /* Grid Viewport Layout */
+        .grid-viewport {
+            flex: 1;
+            min-height: 0;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background-color: var(--bg);
+            overflow: hidden;
+        }
+
+        .dashboard-row {
+            display: flex;
+            gap: 14px;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .row-top { flex: 1; min-height: 0; }
+        .row-bottom { flex: 0 0 260px; }
+
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            min-height: 0;
+            flex: 1 1 0;
+        }
+
+        .panel-head {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            padding-bottom: 3px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .panel-body {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            gap: 8px;
+        }
+
+        .kpi-tables-row {
+            display: flex;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .kpi-table-card {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1.5px solid var(--accent-blue);
+            border-radius: 12px;
+            padding: 6px 10px;
+            min-width: 0;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+        }
+
+        .kpi-table-title {
+            font-size: 0.70rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.2px;
+        }
+
+        .kpi-table-title i {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            background: rgba(2, 132, 199, 0.14);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        .panel-head > span > i:first-child, .panel-head > i:first-child {
+            width: 22px;
+            height: 22px;
+            border-radius: 7px;
+            background: rgba(2, 132, 199, 0.14);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            margin-right: 2px;
+        }
+
+        .mini-card-layout {
+            container-type: inline-size;
+            container-name: kpi-layout;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            grid-auto-rows: 1fr;
+            gap: clamp(4px, 1.5cqi, 8px);
+            flex: 1;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        /* Minimal corporate card system: flat surface (var(--card-bg)), a thin
+           accent-colored left border + icon tint carry status, subtle shadow only.
+           Fully theme-aware via CSS variables - no per-theme special-casing needed. */
+        .mini-card-big, .mini-card-small, .metric-card {
+            position: relative;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--card-accent, var(--accent-blue));
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            color: var(--text-main);
+            cursor: pointer;
+            transition: box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+
+        .mini-card-big:hover, .mini-card-small:hover, .metric-card:hover {
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .mini-card-big.active-quick-filter, .mini-card-small.active-quick-filter, .metric-card.active-quick-filter {
+            box-shadow: 0 0 0 2px var(--card-accent, var(--accent-blue));
+        }
+
+        .mini-card-big.dimmed-card, .mini-card-small.dimmed-card, .metric-card.dimmed-card {
+            opacity: 0.45;
+        }
+
+        .mini-card-big.non-clickable, .mini-card-small.non-clickable, .metric-card.non-clickable {
+            cursor: default;
+        }
+
+        .mini-card-big, .mini-card-small {
+            container-type: inline-size;
+            min-width: 0;
+            min-height: 0;
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            /* More prominent than the flat corporate base shadow so User/Vendor
+               Metrics cards read clearly as the dashboard's focal point. */
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+        }
+
+        .mini-card-big:hover, .mini-card-small:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+        }
+
+        .mini-card-big {
+            grid-row: span 2;
+            padding: clamp(6px, 3cqi, 14px);
+            min-height: 0;
+        }
+
+        /* Below this container width there isn't room for a 2-row-tall
+           featured card beside the small cards - drop it back to one row
+           so auto-fit can wrap the group instead of squeezing it. */
+        @container kpi-layout (max-width: 420px) {
+            .mini-card-big { grid-row: span 1; }
+        }
+
+        .mini-card-small {
+            padding: clamp(4px, 3cqi, 10px);
+            min-height: 0;
+        }
+
+        .mini-card-icon-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: clamp(16px, 10cqi, 22px);
+            height: clamp(16px, 10cqi, 22px);
+            border-radius: 6px;
+            background: var(--filter-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(9px, 5cqi, 12px);
+            flex-shrink: 0;
+            color: var(--card-accent, var(--accent-blue));
+        }
+
+        .mini-card-big .mini-card-icon-badge {
+            top: 10px;
+            right: 10px;
+            width: clamp(20px, 8cqi, 28px);
+            height: clamp(20px, 8cqi, 28px);
+            font-size: clamp(10px, 4.5cqi, 14px);
+        }
+
+        .mini-card-text-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(1px, 1cqi, 4px);
+            text-align: center;
+            width: 100%;
+            min-height: 0;
+        }
+
+        /* Card Functionality split card (RF / HF) - replaces the old single-value
+           mini-card-text-block with two independently clickable halves
+           sharing one card, separated by a vertical divider. */
+        .mini-card-split-body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .mini-card-split-half {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            cursor: pointer;
+            border-radius: 6px;
+            padding: 3px 2px;
+            transition: background 0.15s ease;
+        }
+
+        .mini-card-split-half:hover { background: rgba(0, 0, 0, 0.05); }
+        [data-theme="dark"] .mini-card-split-half:hover { background: rgba(255, 255, 255, 0.07); }
+
+        .mini-card-split-half.active-quick-filter { background: var(--card-accent, var(--accent-blue)); }
+        .mini-card-split-half.active-quick-filter .mini-card-split-value,
+        .mini-card-split-half.active-quick-filter .mini-card-split-label { color: #ffffff; }
+
+        .mini-card-split-divider {
+            width: 1px;
+            align-self: stretch;
+            margin: 4px 0;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+
+        .mini-card-split-value {
+            font-size: clamp(14px, 11cqi, 22px);
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1;
+        }
+
+        .mini-card-split-label {
+            font-size: clamp(7px, 5cqi, 9px);
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .mini-card-label {
+            font-size: clamp(9px, 7cqi, 12px);
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 95%;
+        }
+
+        .mini-card-big .mini-card-label { font-size: clamp(10px, 6cqi, 13px); }
+
+        .mini-card-value {
+            font-size: clamp(20px, 15cqi, 36px);
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1.15;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 95%;
+        }
+
+        .mini-card-big .mini-card-value { font-size: clamp(28px, 20cqi, 48px); }
+
+        .grad-blue { --card-accent: var(--accent-blue); }
+        .grad-green { --card-accent: var(--accent-green); }
+        .grad-red { --card-accent: var(--accent-red); }
+        .grad-amber { --card-accent: var(--accent-amber); }
+        .grad-purple { --card-accent: var(--accent-purple); }
+        .grad-cyan { --card-accent: var(--accent-cyan); }
+        .grad-slate { --card-accent: var(--text-muted); }
+
+        .mini-card-trend {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: clamp(9px, 6.5cqi, 11px);
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 95%;
+        }
+
+        .mini-card-trend.positive { color: var(--accent-green); }
+        .mini-card-trend.negative { color: var(--accent-red); }
+
+        /* While the filter bar is expanded it eats into the KPI row's height,
+           so trim the type scale slightly rather than let it clip - restored
+           to full size the moment the filter bar collapses. */
+        body.filters-open .mini-card-label { font-size: clamp(8px, 6cqi, 11px); }
+        body.filters-open .mini-card-big .mini-card-label { font-size: clamp(9px, 5.5cqi, 12px); }
+        body.filters-open .mini-card-value { font-size: clamp(18px, 13cqi, 32px); }
+        body.filters-open .mini-card-big .mini-card-value { font-size: clamp(24px, 17cqi, 42px); }
+        body.filters-open .mini-card-trend { font-size: clamp(8px, 6cqi, 10px); }
+
+        /* Tab controls (chart view switch, approval performance tabs) */
+        .tab-group {
+            display: flex;
+            gap: 3px;
+            flex-shrink: 0;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 4px;
+            padding: 3px 6px;
+            font-size: 0.58rem;
+            font-weight: 700;
+            cursor: pointer;
+            flex: 1 1 auto;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover { border-color: var(--accent-blue); }
+
+        .tab-btn.active {
+            background: var(--accent-blue);
+            color: #ffffff;
+            border-color: var(--accent-blue);
+        }
+
+        .tab-content {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            min-height: 0;
+            min-width: 0;
+        }
+
+        .tab-content.active { display: flex; }
+
+        .tab-contents-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            gap: 8px;
+        }
+
+        .chart-boxes-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            gap: 8px;
+        }
+
+        .bottom-row {
+            display: flex;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        .excel-panel { flex: 3 1 0; min-height: 0; }
+        .approval-panel { flex: 1 1 0; min-height: 0; }
+
+        #chartPanel, .excel-panel, .approval-panel {
+            border: 1.5px solid var(--accent-blue);
+            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+        }
+
+        .card-subgrid {
+            container-type: inline-size;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-auto-rows: minmax(46px, auto);
+            gap: 6px;
+            height: 100%;
+            align-content: start;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .metric-card {
+            container-type: inline-size;
+            position: relative;
+            overflow: visible;
+            border-radius: 12px;
+            padding: clamp(6px, 3cqi, 10px) clamp(8px, 4cqi, 12px);
+            display: flex;
+            align-items: center;
+            min-height: 46px;
+            color: var(--text-main);
+        }
+
+        .metric-card > div:last-child {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
+            min-width: 0;
+            padding-right: 20px;
+            width: 100%;
+        }
+
+        .metric-icon {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: clamp(14px, 9cqi, 18px);
+            height: clamp(14px, 9cqi, 18px);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(8px, 4.5cqi, 11px);
+            flex-shrink: 0;
+            background: var(--filter-bg);
+            color: var(--card-accent, var(--accent-blue));
+        }
+
+        .metric-label {
+            /* Fixed size (not cqi-based) so every card - including the
+               2-column-wide bottleneck card - renders the same text size. */
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            line-height: 1.15;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 95%;
+        }
+
+        .metric-value {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1.15;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 95%;
+        }
+
+        .chart-box {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: box-shadow 0.15s ease;
+        }
+
+        .chart-box.chart-filtered {
+            box-shadow: inset 0 0 0 2px var(--accent-blue);
+        }
+

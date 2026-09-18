@@ -1,0 +1,92 @@
+        :root {
+            /* Enterprise banking palette */
+            --brand-primary: #163B70;
+            --bg: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --border: #E5E7EB;
+            --filter-bg: #F5F7FA;
+            --input-bg: #FFFFFF;
+            --accent-blue: #1E5AA8;
+            --accent-green: #2E7D32;
+            --accent-red: #C62828;
+            --accent-amber: #ED6C02;
+            --accent-purple: #5B6B82;
+            --accent-cyan: #3E6C99;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --excel-header: #F0F3F7;
+            --excel-hover: #F5F7FA;
+            --badge-green-bg: #E6F2E6;
+            --badge-green-text: #1E5C21;
+            --badge-amber-bg: #FDECDC;
+            --badge-amber-text: #A34E02;
+            --badge-red-bg: #F8E1E1;
+            --badge-red-text: #8E1F1F;
+            --badge-blue-bg: #E3EDF9;
+            --badge-blue-text: #1E5AA8;
+            --badge-indigo-bg: #E9E6F8;
+            --badge-indigo-text: #4338A8;
+            --badge-gray-bg: #EEF0F3;
+            --badge-gray-text: #4B5563;
+        }
+
+        [data-theme="dark"] {
+            --brand-primary: #0F1B2E;
+            --bg: #0F1B2E;
+            --card-bg: #16233A;
+            --border: #263650;
+            --filter-bg: #121F34;
+            --input-bg: #0F1B2E;
+            --accent-blue: #5B8AC7;
+            --accent-green: #5AA860;
+            --accent-red: #E07070;
+            --accent-amber: #F0A050;
+            --accent-purple: #8A9AB0;
+            --accent-cyan: #7BA3C7;
+            --text-main: #E5E9EF;
+            --text-muted: #94A3B8;
+            --excel-header: #101B2C;
+            --excel-hover: #1C2C46;
+            --badge-green-bg: #1B3A1E;
+            --badge-green-text: #8FCB92;
+            --badge-amber-bg: #4A3316;
+            --badge-amber-text: #F0B978;
+            --badge-red-bg: #4A1E1E;
+            --badge-red-text: #E79A9A;
+            --badge-blue-bg: #1B2E4A;
+            --badge-blue-text: #8FB4E3;
+            --badge-indigo-bg: #2C2652;
+            --badge-indigo-text: #B3A8F0;
+            --badge-gray-bg: #263042;
+            --badge-gray-text: #AEB8C7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            height: 44px;
+            background: var(--brand-primary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            flex-shrink: 0;
+        }
+

@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UBL Bank — Card Issuance & Operations Executive Dashboard</title>
+    <!-- Chart.js & FontAwesome -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout-header.css">
+    <link rel="stylesheet" href="css/modal-create-request.css">
+    <link rel="stylesheet" href="css/modal-history-drawer.css">
+    <link rel="stylesheet" href="css/components-buttons-filterbar.css">
+    <link rel="stylesheet" href="css/filters-dropdowns-charts-controls.css">
+    <link rel="stylesheet" href="css/layout-kpi-charts.css">
+    <link rel="stylesheet" href="css/table.css">
+    <link rel="stylesheet" href="css/doc-review-gallery.css">
+    <link rel="stylesheet" href="css/modal-image-preview.css">
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1 class="header-title">
+            <img class="brand-logo" src="assets/ulogojpg.jpg" alt="UBL">
+            Card Operations Dashboard
+        </h1>
+
+        <div class="global-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="globalSearchInput" placeholder="Search Req ID, Name, CNIC, Phone, Dept, Branch, Vendor..." oninput="applyFilters()">
+        </div>
+
+        <button class="btn-create-request" onclick="openCreateRequestModal()">
+            <i class="fa-solid fa-plus"></i> Create Request
+        </button>
+
+        <div class="header-actions">
+            <span class="last-updated-label" id="lastUpdatedLabel" title="Last data refresh">Updated --:--:--</span>
+            <button class="btn-header-icon" onclick="refreshDashboard()" title="Refresh data"><i class="fa-solid fa-arrows-rotate"></i></button>
+            <button class="btn-header-icon" id="autoRefreshBtn" onclick="toggleAutoRefresh()" title="Toggle auto-refresh (60s)"><i class="fa-regular fa-clock"></i></button>
+            <button class="btn-reset-all" onclick="resetAllFilters()"><i class="fa-solid fa-rotate-left"></i> Reset All Filters</button>
+            <button class="btn-header-icon" onclick="toggleFullscreen()" title="Toggle fullscreen"><i class="fa-solid fa-expand"></i></button>
+            <div class="theme-toggle-pill" id="themePill" onclick="toggleTheme()" title="Toggle Light / Dark Mode">
+                <div class="theme-toggle-thumb">
+                    <i class="fa-solid fa-moon" id="thumbIcon"></i>
+                </div>
+                <div class="theme-toggle-icons">
+                    <i class="fa-solid fa-sun icon-sun"></i>
+                    <i class="fa-solid fa-moon icon-moon"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filter Bar Toggle -->
+    <div class="filter-toggle-bar" id="filterToggleBar" onclick="toggleFilterBar()">
+        <i class="fa-solid fa-sliders"></i>
+        <span>Filters</span>
+        <span class="active-filter-count" id="activeFilterCountBadge" style="display:none;">0</span>
+        <i class="fa-solid fa-chevron-down chevron"></i>
+    </div>
+
+    <!-- Filter Bar (1-Row Optimized) -->
+    <div class="filter-bar-wrapper" id="filterBarWrapper">
+    <div class="filter-bar">
+
+        <div class="filter-group">
+            <span class="filter-label">Frequency</span>
+            <div class="filter-item">
+                <i class="fa-regular fa-calendar" style="color:var(--accent-blue)"></i>
+                <select id="timeRange" onchange="handleRangeChange()">
+                    <option value="all" selected>All</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Issuance</span>
+            <div class="filter-item">
+                <i class="fa-solid fa-credit-card" style="color:var(--accent-cyan)"></i>
+                <div class="ms-dropdown" id="issuanceTypeSelect">
+                    <button type="button" class="ms-toggle-btn" onclick="toggleMsPanel('issuanceTypeSelect', event)">
+                        <span class="ms-text">All</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="ms-panel">
+                        <label class="ms-option"><input type="checkbox" value="first_time" onchange="onMsChange('issuanceTypeSelect','first_time',this)"> New</label>
+                        <label class="ms-option"><input type="checkbox" value="reissuance" onchange="onMsChange('issuanceTypeSelect','reissuance',this)"> Renewal</label>
+                        <label class="ms-option"><input type="checkbox" value="replacement" onchange="onMsChange('issuanceTypeSelect','replacement',this)"> Replace</label>
+                        <label class="ms-option"><input type="checkbox" value="emergency" onchange="onMsChange('issuanceTypeSelect','emergency',this)"> Urgent</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-group" id="monthSelectBox" style="display:none;">
+            <span class="filter-label">Month</span>
+            <div class="filter-item">
+                <i class="fa-solid fa-calendar-days" style="color:var(--accent-blue)"></i>
+                <select id="selectedMonth" onchange="handleMonthChange()">
+                    <option value="all" selected>All</option>
+                    <option value="Jan">Jan</option>
+                    <option value="Feb">Feb</option>
+                    <option value="Mar">Mar</option>
+                    <option value="Apr">Apr</option>
+                    <option value="May">May</option>
+                    <option value="Jun">Jun</option>
+                    <option value="Jul">Jul</option>
+                    <option value="Aug">Aug</option>
+                    <option value="Sep">Sep</option>
+                    <option value="Oct">Oct</option>
+                    <option value="Nov">Nov</option>
+                    <option value="Dec">Dec</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filter-group" id="customDates" style="display:none;">
+            <span class="filter-label">Dates</span>
+            <div class="filter-item">
+                <input type="text" id="startD" class="custom-date-input" placeholder="MM-DD-YYYY" maxlength="10">
+                <span style="color:var(--text-muted)">-</span>
+                <input type="text" id="endD" class="custom-date-input" placeholder="MM-DD-YYYY" maxlength="10">
+                <button class="btn-apply" onclick="applyCustomDateRange()">Apply</button>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Group</span>
+            <div class="filter-item">
+                <i class="fa-solid fa-building" style="color:var(--accent-blue)"></i>
+                <div class="ms-dropdown" id="deptSelect">
+                    <button type="button" class="ms-toggle-btn" onclick="toggleMsPanel('deptSelect', event)">
+                        <span class="ms-text">All</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="ms-panel">
+                        <label class="ms-option"><input type="checkbox" value="Retail" onchange="onMsChange('deptSelect','Retail',this)"> Retail</label>
+                        <label class="ms-option"><input type="checkbox" value="Corporate" onchange="onMsChange('deptSelect','Corporate',this)"> Corporate</label>
+                        <label class="ms-option"><input type="checkbox" value="HR" onchange="onMsChange('deptSelect','HR',this)"> HR</label>
+                        <label class="ms-option"><input type="checkbox" value="Operations" onchange="onMsChange('deptSelect','Operations',this)"> Ops</label>
+                        <label class="ms-option"><input type="checkbox" value="Finance" onchange="onMsChange('deptSelect','Finance',this)"> Finance</label>
+                        <label class="ms-option"><input type="checkbox" value="IT" onchange="onMsChange('deptSelect','IT',this)"> IT</label>
+                        <label class="ms-option"><input type="checkbox" value="Risk Management" onchange="onMsChange('deptSelect','Risk Management',this)"> Risk Management</label>
+                        <label class="ms-option"><input type="checkbox" value="Compliance" onchange="onMsChange('deptSelect','Compliance',this)"> Compliance</label>
+                        <label class="ms-option"><input type="checkbox" value="Marketing" onchange="onMsChange('deptSelect','Marketing',this)"> Marketing</label>
+                        <label class="ms-option"><input type="checkbox" value="Legal" onchange="onMsChange('deptSelect','Legal',this)"> Legal</label>
+                        <label class="ms-option"><input type="checkbox" value="Treasury" onchange="onMsChange('deptSelect','Treasury',this)"> Treasury</label>
+                        <label class="ms-option"><input type="checkbox" value="Audit" onchange="onMsChange('deptSelect','Audit',this)"> Audit</label>
+                        <label class="ms-option"><input type="checkbox" value="Digital Banking" onchange="onMsChange('deptSelect','Digital Banking',this)"> Digital Banking</label>
+                        <label class="ms-option"><input type="checkbox" value="Procurement" onchange="onMsChange('deptSelect','Procurement',this)"> Procurement</label>
+                        <label class="ms-option"><input type="checkbox" value="Customer Service" onchange="onMsChange('deptSelect','Customer Service',this)"> Customer Service</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Department</span>
+            <div class="filter-item">
+                <i class="fa-solid fa-sitemap" style="color:var(--accent-blue)"></i>
+                <div class="ms-dropdown" id="departmentSelect">
+                    <button type="button" class="ms-toggle-btn" onclick="toggleMsPanel('departmentSelect', event)">
+                        <span class="ms-text">All</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="ms-panel">
+                        <label class="ms-option"><input type="checkbox" value="Card Operations" onchange="onMsChange('departmentSelect','Card Operations',this)"> Card Operations</label>
+                        <label class="ms-option"><input type="checkbox" value="Customer Service" onchange="onMsChange('departmentSelect','Customer Service',this)"> Customer Service</label>
+                        <label class="ms-option"><input type="checkbox" value="HR Operations" onchange="onMsChange('departmentSelect','HR Operations',this)"> HR Operations</label>
+                        <label class="ms-option"><input type="checkbox" value="Risk &amp; Compliance" onchange="onMsChange('departmentSelect','Risk &amp; Compliance',this)"> Risk &amp; Compliance</label>
+                        <label class="ms-option"><input type="checkbox" value="Finance &amp; Accounts" onchange="onMsChange('departmentSelect','Finance &amp; Accounts',this)"> Finance &amp; Accounts</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Vendor</span>
+            <div class="filter-item">
+                <i class="fa-solid fa-truck-fast" style="color:var(--accent-cyan)"></i>
+                <div class="ms-dropdown" id="vendorSelect">
+                    <button type="button" class="ms-toggle-btn" onclick="toggleMsPanel('vendorSelect', event)">
+                        <span class="ms-text">All</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="ms-panel">
+                        <label class="ms-option"><input type="checkbox" value="__sent__" onchange="onMsChange('vendorSelect','__sent__',this)"> Sent</label>
+                        <label class="ms-option" style="border-bottom:1px solid var(--border); padding-bottom:6px; margin-bottom:2px;"><input type="checkbox" value="__not_sent__" onchange="onMsChange('vendorSelect','__not_sent__',this)"> Not Sent</label>
+                        <label class="ms-option"><input type="checkbox" value="TPS" onchange="onMsChange('vendorSelect','TPS',this)"> TPS</label>
+                        <label class="ms-option"><input type="checkbox" value="NADRA Tech" onchange="onMsChange('vendorSelect','NADRA Tech',this)"> NADRA Tech</label>
+                        <label class="ms-option"><input type="checkbox" value="PakData Cards" onchange="onMsChange('vendorSelect','PakData Cards',this)"> PakData Cards</label>
+                        <label class="ms-option"><input type="checkbox" value="SecurePrint Solutions" onchange="onMsChange('vendorSelect','SecurePrint Solutions',this)"> SecurePrint Solutions</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Region</span>
+            <div class="filter-item">
+                <i class="fa-solid fa-earth-americas" style="color:var(--accent-blue)"></i>
+                <div class="ms-dropdown" id="regionSelect">
+                    <button type="button" class="ms-toggle-btn" onclick="toggleMsPanel('regionSelect', event)">
+                        <span class="ms-text">All</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="ms-panel">
+                        <label class="ms-option"><input type="checkbox" value="North" onchange="onMsChange('regionSelect','North',this)"> North</label>
+                        <label class="ms-option"><input type="checkbox" value="South" onchange="onMsChange('regionSelect','South',this)"> South</label>
+                        <label class="ms-option"><input type="checkbox" value="Central" onchange="onMsChange('regionSelect','Central',this)"> Central</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Cluster</span>
+            <div class="filter-item">
+                <i class="fa-solid fa-diagram-project" style="color:var(--accent-blue)"></i>
+                <div class="ms-dropdown" id="clusterSelect">
+                    <button type="button" class="ms-toggle-btn" onclick="toggleMsPanel('clusterSelect', event)">
+                        <span class="ms-text">All</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="ms-panel">
+                        <label class="ms-option"><input type="checkbox" value="metro" onchange="onMsChange('clusterSelect','metro',this)"> Metro</label>
+                        <label class="ms-option"><input type="checkbox" value="suburban" onchange="onMsChange('clusterSelect','suburban',this)"> Suburban</label>
+                        <label class="ms-option"><input type="checkbox" value="regional_hub" onchange="onMsChange('clusterSelect','regional_hub',this)"> Hub</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Branch</span>
+            <div class="filter-item">
+                <i class="fa-solid fa-code-branch" style="color:var(--accent-blue)"></i>
+                <div class="ms-dropdown" id="branchSelect">
+                    <button type="button" class="ms-toggle-btn" onclick="toggleMsPanel('branchSelect', event)">
+                        <span class="ms-text">All</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="ms-panel">
+                        <label class="ms-option"><input type="checkbox" value="alpha" onchange="onMsChange('branchSelect','alpha',this)"> Alpha</label>
+                        <label class="ms-option"><input type="checkbox" value="beta" onchange="onMsChange('branchSelect','beta',this)"> Beta</label>
+                        <label class="ms-option"><input type="checkbox" value="gamma" onchange="onMsChange('branchSelect','gamma',this)"> Gamma</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Category</span>
+            <div class="filter-item">
+                <i class="fa-solid fa-list-check" style="color:var(--accent-blue)"></i>
+                <div class="ms-dropdown" id="categorySelect">
+                    <button type="button" class="ms-toggle-btn" onclick="toggleMsPanel('categorySelect', event)">
+                        <span class="ms-text">All</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="ms-panel">
+                        <label class="ms-option"><input type="checkbox" value="standard" onchange="onMsChange('categorySelect','standard',this)"> Standard</label>
+                        <label class="ms-option"><input type="checkbox" value="priority" onchange="onMsChange('categorySelect','priority',this)"> Priority</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Card Type</span>
+            <div class="filter-item">
+                <i class="fa-solid fa-id-card" style="color:var(--accent-purple)"></i>
+                <div class="ms-dropdown" id="cardCategorySelect">
+                    <button type="button" class="ms-toggle-btn" onclick="toggleMsPanel('cardCategorySelect', event)">
+                        <span class="ms-text">All</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="ms-panel">
+                        <label class="ms-option"><input type="checkbox" value="Conventional" onchange="onMsChange('cardCategorySelect','Conventional',this)"> Conventional</label>
+                        <label class="ms-option"><input type="checkbox" value="Islamic" onchange="onMsChange('cardCategorySelect','Islamic',this)"> Islamic</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Gender</span>
+            <div class="filter-item">
+                <i class="fa-solid fa-venus-mars" style="color:var(--accent-purple)"></i>
+                <div class="ms-dropdown" id="genderSelect">
+                    <button type="button" class="ms-toggle-btn" onclick="toggleMsPanel('genderSelect', event)">
+                        <span class="ms-text">All</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="ms-panel">
+                        <label class="ms-option"><input type="checkbox" value="male" onchange="onMsChange('genderSelect','male',this)"> Male</label>
+                        <label class="ms-option"><input type="checkbox" value="female" onchange="onMsChange('genderSelect','female',this)"> Female</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Status</span>
+            <div class="filter-item">
+                <i class="fa-solid fa-circle-info" style="color:var(--accent-amber)"></i>
+                <div class="ms-dropdown" id="statusSelect">
+                    <button type="button" class="ms-toggle-btn" onclick="toggleMsPanel('statusSelect', event)">
+                        <span class="ms-text">All</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="ms-panel">
+                        <label class="ms-option"><input type="checkbox" value="Approved" onchange="onMsChange('statusSelect','Approved',this)"> Approved</label>
+                        <label class="ms-option"><input type="checkbox" value="Pending" onchange="onMsChange('statusSelect','Pending',this)"> Pending</label>
+                        <label class="ms-option"><input type="checkbox" value="Rejected" onchange="onMsChange('statusSelect','Rejected',this)"> Rejected</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    </div>
+
+    <!-- Main Viewport Grid -->
+    <div class="grid-viewport">
+
+        <!-- ROW 1: KPI Tables (2/3) + Merged Chart Panel (1/3) -->
+        <div class="dashboard-row row-top">
+
+            <!-- KPI Tables: User Metrics / Vendor Metrics -->
+            <div class="kpi-tables-row" style="flex:3; min-height:0;">
+                <div class="kpi-table-card">
+                    <div class="kpi-table-title"><i class="fa-solid fa-users"></i> User Metrics</div>
+                    <div class="mini-card-layout">
+                        <div class="mini-card-big grad-blue" onclick="toggleCardFilter(this, () => quickFilterShowAll())" title="Show all requests in Excel sheet">
+                            <div class="mini-card-icon-badge"><i class="fa-solid fa-inbox"></i></div>
+                            <div class="mini-card-text-block">
+                                <div class="mini-card-value" id="kpiTotal">14,200</div>
+                                <div class="mini-card-label">Total Requests</div>
+                                <div class="mini-card-trend positive"><i class="fa-solid fa-arrow-up"></i> 8.4% vs last week</div>
+                            </div>
+                        </div>
+                        <div class="mini-card-small grad-green" onclick="toggleCardFilter(this, () => quickFilterStatus('Approved'))" title="Show approved requests in Excel sheet">
+                            <div class="mini-card-icon-badge"><i class="fa-solid fa-circle-check"></i></div>
+                            <div class="mini-card-text-block">
+                                <div class="mini-card-value" id="kpiApproved">11,190</div>
+                                <div class="mini-card-label">Approved</div>
+                                <div class="mini-card-trend positive"><i class="fa-solid fa-arrow-up"></i> 4.1%</div>
+                            </div>
+                        </div>
+                        <div class="mini-card-small grad-red" onclick="toggleCardFilter(this, () => quickFilterStatus('Rejected'))" title="Show rejected requests in Excel sheet">
+                            <div class="mini-card-icon-badge"><i class="fa-solid fa-circle-xmark"></i></div>
+                            <div class="mini-card-text-block">
+                                <div class="mini-card-value" id="kpiRejected">724</div>
+                                <div class="mini-card-label">Rejected</div>
+                                <div class="mini-card-trend positive"><i class="fa-solid fa-arrow-down"></i> 2.3%</div>
+                            </div>
+                        </div>
+                        <div class="mini-card-small grad-amber" onclick="toggleCardFilter(this, () => quickFilterStatus('Pending'))" title="Show pending requests in Excel sheet">
+                            <div class="mini-card-icon-badge"><i class="fa-solid fa-hourglass-half"></i></div>
+                            <div class="mini-card-text-block">
+                                <div class="mini-card-value" id="kpiPending">2,286</div>
+                                <div class="mini-card-label">Pending Approval</div>
+                                <div class="mini-card-trend negative"><i class="fa-solid fa-arrow-up"></i> 1.7%</div>
+                            </div>
+                        </div>
+                        <div class="mini-card-small grad-purple" title="Card Functionality Breakdown">
+                            <div class="mini-card-icon-badge"><i class="fa-solid fa-id-card"></i></div>
+                            <div class="mini-card-split-body">
+                                <div class="mini-card-split-half" id="cardTypeHalfRF" onclick="toggleCardTypeFilter(this, 'RF')" title="Show RF card functionality requests in Excel sheet">
+                                    <div class="mini-card-split-value" id="kpiCardTypeRF">0</div>
+                                    <div class="mini-card-split-label">RF</div>
+                                </div>
+                                <div class="mini-card-split-divider"></div>
+                                <div class="mini-card-split-half" id="cardTypeHalfHF" onclick="toggleCardTypeFilter(this, 'HF')" title="Show HF card functionality requests in Excel sheet">
+                                    <div class="mini-card-split-value" id="kpiCardTypeHF">0</div>
+                                    <div class="mini-card-split-label">HF</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="kpi-table-card">
+                    <div class="kpi-table-title"><i class="fa-solid fa-truck-fast"></i> Vendor Metrics</div>
+                    <div class="mini-card-layout">
+                        <div class="mini-card-big grad-blue" onclick="toggleCardFilter(this, () => quickFilterVendorSent(true))" title="Show requests sent to vendor in Excel sheet">
+                            <div class="mini-card-icon-badge"><i class="fa-solid fa-paper-plane"></i></div>
+                            <div class="mini-card-text-block">
+                                <div class="mini-card-value" id="kpiVendor">10,821</div>
+                                <div class="mini-card-label">Sent to Vendor</div>
+                                <div class="mini-card-trend positive"><i class="fa-solid fa-arrow-up"></i> 6.2% vs last week</div>
+                            </div>
+                        </div>
+                        <div class="mini-card-small grad-slate" onclick="toggleCardFilter(this, () => quickFilterVendorSent(true))" title="Show requests sent to vendor in Excel sheet">
+                            <div class="mini-card-icon-badge"><i class="fa-solid fa-print"></i></div>
+                            <div class="mini-card-text-block">
+                                <div class="mini-card-value" id="kpiPrinted">10,128</div>
+                                <div class="mini-card-label">Cards Printed</div>
+                                <div class="mini-card-trend positive"><i class="fa-solid fa-arrow-up"></i> 5.5%</div>
+                            </div>
+                        </div>
+                        <div class="mini-card-small grad-green" onclick="toggleCardFilter(this, () => quickFilterVendorSent(true))" title="Show requests sent to vendor in Excel sheet">
+                            <div class="mini-card-icon-badge"><i class="fa-solid fa-truck"></i></div>
+                            <div class="mini-card-text-block">
+                                <div class="mini-card-value" id="kpiDelivered">9,551</div>
+                                <div class="mini-card-label">Delivered</div>
+                                <div class="mini-card-trend positive"><i class="fa-solid fa-arrow-up"></i> 4.9%</div>
+                            </div>
+                        </div>
+                        <div class="mini-card-small grad-cyan" onclick="toggleCardFilter(this, () => quickFilterVendorSent(true))" title="Show requests sent to vendor in Excel sheet">
+                            <div class="mini-card-icon-badge"><i class="fa-solid fa-bolt"></i></div>
+                            <div class="mini-card-text-block">
+                                <div class="mini-card-value" id="kpiActivation">84.2%</div>
+                                <div class="mini-card-label">30-D Activation</div>
+                                <div class="mini-card-trend positive"><i class="fa-solid fa-arrow-up"></i> 0.6pt</div>
+                            </div>
+                        </div>
+                        <div class="mini-card-small grad-red non-clickable" title="SLA Breach Risk">
+                            <div class="mini-card-icon-badge"><i class="fa-solid fa-stopwatch"></i></div>
+                            <div class="mini-card-text-block">
+                                <div class="mini-card-value" id="kpiSlaRisk">210</div>
+                                <div class="mini-card-label">SLA Breach Risk</div>
+                                <div class="mini-card-trend positive"><i class="fa-solid fa-arrow-down"></i> 1.2%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Merged Chart Panel: Request by Group (bar) / Gender Based Breakdown (donut) -->
+            <div class="panel" id="chartPanel" style="flex:1;">
+                <div class="panel-head">
+                    <span><i class="fa-solid fa-chart-bar"></i> <span id="trendChartTitle">Requests by Group - All Requests</span></span>
+                    <div class="chart-header-controls">
+                        <div class="ms-dropdown" id="chartTypeDropdown">
+                            <button type="button" class="btn-chart-control" onclick="toggleChartTypePanel(event)" title="Chart Type">
+                                <i class="fa-solid fa-chart-column"></i> <i class="fa-solid fa-chevron-down" style="font-size:0.5rem;"></i>
+                            </button>
+                            <div class="ms-panel">
+                                <div class="ms-option chart-type-option active" data-type="bar" onclick="setActiveChartType('bar'); event.stopPropagation();"><i class="fa-solid fa-chart-column"></i> Bar Chart</div>
+                                <div class="ms-option chart-type-option" data-type="line" onclick="setActiveChartType('line'); event.stopPropagation();"><i class="fa-solid fa-chart-line"></i> Line Chart</div>
+                                <div class="ms-option chart-type-option" data-type="area" onclick="setActiveChartType('area'); event.stopPropagation();"><i class="fa-solid fa-chart-area"></i> Area Chart</div>
+                                <div class="ms-option chart-type-option" data-type="donut" onclick="setActiveChartType('donut'); event.stopPropagation();"><i class="fa-solid fa-chart-pie"></i> Donut Chart</div>
+                            </div>
+                        </div>
+                        <div class="ms-dropdown" id="chartColorDropdown">
+                            <button type="button" class="btn-chart-control" onclick="toggleChartColorPanel(event)" title="Color Palette">
+                                <i class="fa-solid fa-palette"></i> <i class="fa-solid fa-chevron-down" style="font-size:0.5rem;"></i>
+                            </button>
+                            <div class="ms-panel">
+                                <div class="ms-option chart-color-option active" data-palette="corporate" onclick="setActiveChartPalette('corporate'); event.stopPropagation();"><span class="palette-swatch" style="background:#163B70"></span> UBL / Corporate Blue</div>
+                                <div class="ms-option chart-color-option" data-palette="professionalBlue" onclick="setActiveChartPalette('professionalBlue'); event.stopPropagation();"><span class="palette-swatch" style="background:#1D4ED8"></span> Professional Blue</div>
+                                <div class="ms-option chart-color-option" data-palette="teal" onclick="setActiveChartPalette('teal'); event.stopPropagation();"><span class="palette-swatch" style="background:#0F766E"></span> Teal</div>
+                                <div class="ms-option chart-color-option" data-palette="purple" onclick="setActiveChartPalette('purple'); event.stopPropagation();"><span class="palette-swatch" style="background:#5B21B6"></span> Purple</div>
+                                <div class="ms-option chart-color-option" data-palette="green" onclick="setActiveChartPalette('green'); event.stopPropagation();"><span class="palette-swatch" style="background:#166534"></span> Green</div>
+                                <div class="ms-option chart-color-option" data-palette="monochrome" onclick="setActiveChartPalette('monochrome'); event.stopPropagation();"><span class="palette-swatch" style="background:#4B5563"></span> Monochrome</div>
+                            </div>
+                        </div>
+                        <div class="ms-dropdown" id="chartViewDropdown">
+                            <button type="button" class="btn-export-excel" onclick="toggleChartViewPanel(event)" title="Filter">
+                                <i class="fa-solid fa-filter"></i> <span id="chartViewLabel" style="display:none;">Group</span> <i class="fa-solid fa-chevron-down" style="font-size:0.5rem;"></i>
+                            </button>
+                            <div class="ms-panel">
+                                <div class="ms-option chart-view-option active" data-view="group" onclick="switchChartView('group'); event.stopPropagation();">Group</div>
+                                <div class="ms-option chart-view-option" data-view="gender" onclick="switchChartView('gender'); event.stopPropagation();">Gender</div>
+                                <div class="ms-option chart-view-option" data-view="trend" onclick="switchChartView('trend'); event.stopPropagation();">Trend</div>
+                                <div class="ms-option chart-view-option" data-view="funnel" onclick="switchChartView('funnel'); event.stopPropagation();">Funnel</div>
+                                <div class="ms-option chart-view-option" data-view="aging" onclick="switchChartView('aging'); event.stopPropagation();">Aging</div>
+                                <div class="ms-option chart-view-option" data-view="rejection" onclick="switchChartView('rejection'); event.stopPropagation();">Rejections</div>
+                                <div class="ms-option chart-view-option" data-view="region" onclick="switchChartView('region'); event.stopPropagation();">Region</div>
+                                <div class="ms-option chart-view-option" data-view="vendor" onclick="switchChartView('vendor'); event.stopPropagation();">Vendor</div>
+                                <div class="ms-option chart-view-option" data-view="sla" onclick="switchChartView('sla'); event.stopPropagation();">SLA</div>
+                                <div class="ms-option chart-view-option" data-view="cardType" onclick="switchChartView('cardType'); event.stopPropagation();">Card Functionality</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-boxes-wrapper" id="chartBoxesWrapper">
+                    <div class="chart-box" id="groupChartBox"><canvas id="deptBarChart"></canvas></div>
+                    <div class="chart-box" id="genderChartBox" style="display:none;"><canvas id="genderChart"></canvas></div>
+                    <div class="chart-box" id="trendChartBox" style="display:none;"><canvas id="trendChart"></canvas></div>
+                    <div class="chart-box" id="funnelChartBox" style="display:none;"><canvas id="funnelChart"></canvas></div>
+                    <div class="chart-box" id="agingChartBox" style="display:none;"><canvas id="agingChart"></canvas></div>
+                    <div class="chart-box" id="rejectionChartBox" style="display:none;"><canvas id="rejectionChart"></canvas></div>
+                    <div class="chart-box" id="regionChartBox" style="display:none;"><canvas id="regionChart"></canvas></div>
+                    <div class="chart-box" id="vendorChartBox" style="display:none;"><canvas id="vendorPerfChart"></canvas></div>
+                    <div class="chart-box" id="slaChartBox" style="display:none;"><canvas id="slaGaugeChart"></canvas></div>
+                    <div class="chart-box" id="cardTypeChartBox" style="display:none;"><canvas id="cardTypeChart"></canvas></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ROW 2: Excel Sheet (2/3) + Approval Performance w/ tabs (1/3) -->
+        <div class="dashboard-row row-bottom">
+
+            <!-- TABULAR DATA SHEET (Excel View) -->
+            <div class="panel excel-panel">
+                <div class="panel-head">
+                    <span>
+                        <i class="fa-solid fa-file-excel" style="color:var(--accent-green)"></i> Applicant Requests Records
+                    </span>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <button type="button" class="btn-export-excel sheet-toolbar-btn" style="background:var(--accent-blue);" onclick="openDocReviewModule()">
+                            <i class="fa-solid fa-images"></i> Document Review
+                        </button>
+                        <div class="ms-dropdown" id="bulkSentVendorDropdown">
+                            <button type="button" class="btn-export-excel sheet-toolbar-btn" style="background:var(--accent-blue);" onclick="toggleBulkSentVendorPanel(event)">
+                                <i class="fa-solid fa-truck-fast"></i> Sent to Vendor
+                            </button>
+                            <div class="ms-panel">
+                                <div class="ms-option" onclick="bulkAssignVendor('TPS'); event.stopPropagation();">TPS</div>
+                                <div class="ms-option" onclick="bulkAssignVendor('NADRA Tech'); event.stopPropagation();">NADRA Tech</div>
+                                <div class="ms-option" onclick="bulkAssignVendor('PakData Cards'); event.stopPropagation();">PakData Cards</div>
+                                <div class="ms-option" onclick="bulkAssignVendor('SecurePrint Solutions'); event.stopPropagation();">SecurePrint Solutions</div>
+                            </div>
+                        </div>
+                        <button class="btn-export-excel" onclick="toggleColumnVisibilityPanel(event)"><i class="fa-solid fa-table-columns"></i> Columns</button>
+                        <button class="btn-export-excel sheet-toolbar-btn" onclick="exportTableToExcel(); event.stopPropagation();"><i class="fa-solid fa-file-arrow-down"></i> Export Excel</button>
+                        <button class="btn-export-excel sheet-toolbar-btn" onclick="exportTableToCsv(); event.stopPropagation();"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                        <button class="btn-export-excel sheet-toolbar-btn" onclick="exportSelectedRows(); event.stopPropagation();"><i class="fa-solid fa-check-double"></i> Export Selected</button>
+                    </div>
+                </div>
+                <div class="col-visibility-panel" id="colVisibilityPanel"></div>
+                <div class="panel-body" id="excelSheetBody">
+                    <div class="excel-table-container">
+                        <table class="excel-table" id="applicantExcelTable">
+                            <thead>
+                                <tr>
+                                    <th id="checkboxColumnTh" style="width:26px;"><input type="checkbox" id="selectAllRowsCheckbox" onchange="toggleSelectAllRows(this)"></th>
+                                    <th data-col-idx="0" draggable="true"><div class="th-row">Req ID</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="reqIdSelect" onclick="openExcelColumnFilter(event, 'id', 'reqIdSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="1" draggable="true"><div class="th-row">Applicant Name</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="applicantNameSelect" onclick="openExcelColumnFilter(event, 'name', 'applicantNameSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="2" draggable="true"><div class="th-row">Issuance Type</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="issuanceTypeSelect" onclick="openExcelColumnFilter(event, 'type', 'issuanceTypeSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="3" draggable="true"><div class="th-row">Group</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="deptSelect" onclick="openExcelColumnFilter(event, 'dept', 'deptSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="4" draggable="true"><div class="th-row">Department</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="departmentSelect" onclick="openExcelColumnFilter(event, 'department', 'departmentSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="5" draggable="true"><div class="th-row">Vendor</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="vendorSelect" onclick="openExcelColumnFilter(event, 'vendor', 'vendorSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="6" draggable="true"><div class="th-row">Region</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="regionSelect" onclick="openExcelColumnFilter(event, 'region', 'regionSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="7" draggable="true"><div class="th-row">Cluster</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="clusterSelect" onclick="openExcelColumnFilter(event, 'cluster', 'clusterSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="8" draggable="true"><div class="th-row">Branch</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="branchSelect" onclick="openExcelColumnFilter(event, 'branch', 'branchSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="9" draggable="true"><div class="th-row">Priority</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="categorySelect" onclick="openExcelColumnFilter(event, 'category', 'categorySelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="10" draggable="true"><div class="th-row">Gender</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="genderSelect" onclick="openExcelColumnFilter(event, 'gender', 'genderSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="11" draggable="true"><div class="th-row">Status</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="statusSelect" onclick="openExcelColumnFilter(event, 'status', 'statusSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="12" draggable="true"><div class="th-row">HR Action Date</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="hrActionDateSelect" onclick="openExcelColumnFilter(event, 'hrActionDate', 'hrActionDateSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="13" draggable="true" class="col-hidden"><div class="th-row">CNIC</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="cnicSelect" onclick="openExcelColumnFilter(event, 'cnic', 'cnicSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="14" draggable="true" class="col-hidden"><div class="th-row">Phone</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="phoneSelect" onclick="openExcelColumnFilter(event, 'phone', 'phoneSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="15" draggable="true" class="col-hidden"><div class="th-row">Date</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="dateSelect" onclick="openExcelColumnFilter(event, 'date', 'dateSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="16" draggable="true"><div class="th-row">Frequency</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="userFreqSelect2" onclick="openExcelColumnFilter(event, 'userFreq', 'userFreqSelect2')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="17" draggable="true"><div class="th-row">Card Functionality</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="cardTypeSelect" onclick="openExcelColumnFilter(event, 'cardType', 'cardTypeSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="18" draggable="true"><div class="th-row">Card Type</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="cardCategorySelect" onclick="openExcelColumnFilter(event, 'cardCategory', 'cardCategorySelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="19" draggable="true" style="width:50px;"><div class="th-row">Preview</div><span class="col-resize-handle"></span></th>
+                                    <th data-col-idx="20" draggable="true"><div class="th-row">Vendor Status</div> <i class="fa-solid fa-filter th-filter-icon" data-ms-id="vendorStatusSelect" onclick="openExcelColumnFilter(event, 'vendorStatus', 'vendorStatusSelect')"></i><span class="col-resize-handle"></span></th>
+                                    <th style="width:60px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="applicantTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row action menu popup (shared, repositioned/repopulated per row) -->
+            <div class="row-action-menu" id="rowActionMenu" onclick="event.stopPropagation()">
+                <div class="ra-option" id="raView"><i class="fa-solid fa-eye"></i> View</div>
+                <div class="ra-option" id="raEdit"><i class="fa-solid fa-pen"></i> Edit</div>
+                <div class="ra-option" id="raHistory"><i class="fa-solid fa-clock-rotate-left"></i> History</div>
+                <div class="ra-option" id="raPreviewCard"><i class="fa-solid fa-id-badge"></i> Preview Card</div>
+                <div class="ra-option" id="raViewImage"><i class="fa-solid fa-image"></i> View Image</div>
+            </div>
+
+            <!-- Excel-style column filter popup (shared, repositioned/repopulated per column) -->
+            <div class="excel-filter-popup" id="excelFilterPopup" onclick="event.stopPropagation()">
+                <div class="ef-sort-row">
+                    <div class="ef-sort-btn" onclick="applyColumnSort(1)"><i class="fa-solid fa-arrow-down-a-z"></i> Sort A to Z</div>
+                    <div class="ef-sort-btn" onclick="applyColumnSort(-1)"><i class="fa-solid fa-arrow-down-z-a"></i> Sort Z to A</div>
+                </div>
+                <div class="ef-divider"></div>
+                <input type="text" class="ef-search" id="efSearchInput" placeholder="Search" oninput="filterExcelPopupOptions(this.value)">
+                <label class="ef-option ef-select-all"><input type="checkbox" id="efSelectAll" onchange="toggleExcelPopupSelectAll(this.checked)"> (Select All)</label>
+                <div class="ef-options-list" id="efOptionsList"></div>
+                <div class="ef-actions">
+                    <button class="ef-btn-ok" onclick="applyExcelFilterPopup()">OK</button>
+                    <button class="ef-btn-cancel" onclick="closeExcelFilterPopup()">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Approval Performance Panel with tabs -->
+            <div class="panel approval-panel" id="approvalPanel">
+                <div class="panel-head">
+                    <span><i class="fa-solid fa-circle-check"></i> Performance Overview</span>
+                </div>
+                <div class="tab-group">
+                    <button class="tab-btn active" id="apTabPerf" onclick="switchApprovalTab('perf')">Approval</button>
+                    <button class="tab-btn" id="apTabVendor" onclick="switchApprovalTab('vendor')">Vendor Performance</button>
+                </div>
+
+                <div class="tab-contents-wrapper" id="approvalContentsWrapper">
+                    <div class="tab-content active" id="apContentPerf">
+                        <div class="card-subgrid">
+                            <div class="metric-card grad-blue" onclick="toggleCardFilter(this, () => quickFilterShowAll())" title="Show all requests in Excel sheet">
+                                <div class="metric-icon"><i class="fa-solid fa-clock"></i></div>
+                                <div>
+                                    <div class="metric-value" id="perfAvgTime">4.2 Hours</div>
+                                    <div class="metric-label">Avg Approval Time</div>
+                                </div>
+                            </div>
+                            <div class="metric-card grad-green" onclick="toggleCardFilter(this, () => quickFilterStatus('Approved'))" title="Show approved requests in Excel sheet">
+                                <div class="metric-icon"><i class="fa-solid fa-thumbs-up"></i></div>
+                                <div>
+                                    <div class="metric-value" id="perfAppRate">78.8%</div>
+                                    <div class="metric-label">Approval Rate</div>
+                                </div>
+                            </div>
+                            <div class="metric-card grad-red" onclick="toggleCardFilter(this, () => quickFilterStatus('Rejected'))" title="Show rejected requests in Excel sheet">
+                                <div class="metric-icon"><i class="fa-solid fa-thumbs-down"></i></div>
+                                <div>
+                                    <div class="metric-value" id="perfRejRate">5.1%</div>
+                                    <div class="metric-label">Rejection Rate</div>
+                                </div>
+                            </div>
+                            <div class="metric-card grad-amber" onclick="toggleCardFilter(this, () => quickFilterShowAll())" title="Show all requests in Excel sheet">
+                                <div class="metric-icon"><i class="fa-solid fa-turn-up"></i></div>
+                                <div>
+                                    <div class="metric-value" id="perfEscalated">162</div>
+                                    <div class="metric-label">Escalated Requests</div>
+                                </div>
+                            </div>
+                            <div class="metric-card grad-blue" onclick="toggleCardFilter(this, () => quickFilterVendorSent(true))" title="Show requests sent to vendor in Excel sheet">
+                                <div class="metric-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                                <div>
+                                    <div class="metric-value" id="perfVendorTime">0.0 Hours</div>
+                                    <div class="metric-label">Avg Vendor Time</div>
+                                </div>
+                            </div>
+                            <div class="metric-card grad-cyan" onclick="toggleCardFilter(this, () => quickFilterVendorSent(true))" title="Show requests sent to vendor in Excel sheet">
+                                <div class="metric-icon"><i class="fa-solid fa-truck-ramp-box"></i></div>
+                                <div>
+                                    <div class="metric-value" id="perfDeliveryTime">0.0 Hours</div>
+                                    <div class="metric-label">Avg Delivery Time</div>
+                                </div>
+                            </div>
+                            <div class="metric-card grad-green" onclick="toggleCardFilter(this, () => quickFilterShowAll())" title="Show all requests in Excel sheet">
+                                <div class="metric-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                                <div>
+                                    <div class="metric-value" id="perfSlaCompliance">100.0%</div>
+                                    <div class="metric-label">SLA Compliance</div>
+                                </div>
+                            </div>
+                            <div class="metric-card grad-red" onclick="toggleCardFilter(this, () => quickFilterOverdue())" title="Show overdue requests in Excel sheet">
+                                <div class="metric-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                                <div>
+                                    <div class="metric-value" id="perfOverdue">0</div>
+                                    <div class="metric-label">Overdue Requests</div>
+                                </div>
+                            </div>
+                            <div class="metric-card grad-amber" onclick="toggleCardFilter(this, () => quickFilterVendorDelay())" title="Show vendor-delayed requests in Excel sheet">
+                                <div class="metric-icon"><i class="fa-solid fa-hourglass-end"></i></div>
+                                <div>
+                                    <div class="metric-value" id="perfVendorDelay">0</div>
+                                    <div class="metric-label">Vendor Delay Count</div>
+                                </div>
+                            </div>
+                            <div class="metric-card grad-purple" onclick="toggleCardFilter(this, () => quickFilterBacklog())" title="Show backlog (pending) requests in Excel sheet">
+                                <div class="metric-icon"><i class="fa-solid fa-layer-group"></i></div>
+                                <div>
+                                    <div class="metric-value" id="perfBacklog">0</div>
+                                    <div class="metric-label">Backlog</div>
+                                </div>
+                            </div>
+                            <div class="metric-card grad-cyan" onclick="toggleCardFilter(this, () => quickFilterThroughput())" title="Show today's processed requests in Excel sheet">
+                                <div class="metric-icon"><i class="fa-solid fa-gauge-high"></i></div>
+                                <div>
+                                    <div class="metric-value" id="perfThroughput">0</div>
+                                    <div class="metric-label">Daily Throughput</div>
+                                </div>
+                            </div>
+                            <div class="metric-card grad-purple" style="grid-column: span 2;" onclick="toggleCardFilter(this, () => revealExcelSheet())" title="View Excel sheet">
+                                <div class="metric-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+                                <div>
+                                    <div class="metric-value" id="perfBottleneck">Risk Clearance Stage (+18h)</div>
+                                    <div class="metric-label">Primary Bottleneck</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="apContentVendor">
+                        <div class="mini-table-container">
+                            <table class="compact-table">
+                                <thead><tr><th>Vendor</th><th>Requests</th><th>Approved</th><th>Rejected</th><th>Pending</th></tr></thead>
+                                <tbody id="vendorPerformanceTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Create Request Modal: Card Issuance Form -->
+    <div class="cr-modal-backdrop" id="crModalBackdrop" onclick="if (event.target === this) closeCreateRequestModal();">
+        <div class="cr-modal" role="dialog" aria-modal="true" aria-labelledby="crModalTitle">
+            <div class="cr-modal-header">
+                <h2 id="crModalTitle"><i class="fa-solid fa-id-card"></i> Card Issuance Form</h2>
+                <div class="cr-modal-header-actions">
+                    <div class="cr-tab-group">
+                        <button type="button" class="cr-tab-btn active" id="crTabFormBtn" onclick="switchCrTab('form')">
+                            <i class="fa-solid fa-file-lines"></i> Form
+                        </button>
+                        <button type="button" class="cr-tab-btn" id="crTabPreviewBtn" onclick="switchCrTab('preview')">
+                            <i class="fa-solid fa-id-badge"></i> Card Preview
+                        </button>
+                    </div>
+                    <button type="button" class="cr-modal-close" onclick="closeCreateRequestModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <div class="cr-modal-body" id="crFormBody">
+                <!-- Instructions -->
+                <ul class="cr-desc-list">
+                    <li>Upload the latest high-resolution employee profile photo image in <strong>JPEG</strong> or <strong>JPG</strong> format with dimensions 90 &times; 120 pixels (aspect ratio 3:4) and a maximum file size of 2MB or less. Use a plain white background for a professional look. Wear formal attire for the employee profile picture.</li>
+                    <li>If your employee card is lost or stolen, please file a police/CPLC complaint, attach the complaint receipt, and request a new card.</li>
+                    <li><strong>Kindly be informed that after all approvals are received, you will receive your Employee Card within five (5) working days.</strong></li>
+                </ul>
+
+                <!-- Employee information + request details: unified grid -->
+                <div class="cr-field-grid">
+                    <div class="cr-field cr-readonly">
+                        <label>Employee Number</label>
+                        <div class="cr-readonly-wrap">
+                            <input type="text" value="923998" readonly>
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="cr-field cr-readonly">
+                        <label>Employee Name</label>
+                        <div class="cr-readonly-wrap">
+                            <input type="text" value="Mansoor Ahmed" readonly>
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="cr-field cr-readonly">
+                        <label>CNIC Number</label>
+                        <div class="cr-readonly-wrap">
+                            <input type="text" value="45104-0654198-5" readonly>
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="cr-field cr-readonly">
+                        <label>Contact Number</label>
+                        <div class="cr-readonly-wrap">
+                            <input type="text" value="0300-0269956" readonly>
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                    </div>
+
+                    <div class="cr-field cr-readonly">
+                        <label>Location</label>
+                        <div class="cr-readonly-wrap">
+                            <input type="text" value="5000 - UBL Head Office" readonly>
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="cr-field">
+                        <label>Emergency Contact</label>
+                        <input type="text" id="crEmergencyContact" placeholder="Name and contact number">
+                    </div>
+                    <div class="cr-field" id="crReasonField">
+                        <label>Reason<span class="cr-required">*</span></label>
+                        <select id="crReason">
+                            <option value="">Select a reason</option>
+                            <option value="Lost">Lost</option>
+                            <option value="Damaged">Damaged</option>
+                            <option value="Renewal">Renewal</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <span class="cr-error-msg">Please select a reason.</span>
+                    </div>
+                    <div class="cr-field">
+                        <label>Blood Group</label>
+                        <select id="crBloodGroup">
+                            <option value="">Select</option>
+                            <option>A+</option><option>A-</option>
+                            <option>B+</option><option>B-</option>
+                            <option>AB+</option><option>AB-</option>
+                            <option>O+</option><option>O-</option>
+                        </select>
+                    </div>
+
+                    <div class="cr-field cr-span2" id="crJustificationField">
+                        <label>Justification / Comments<span class="cr-required">*</span></label>
+                        <textarea id="crJustification" placeholder="Explain the reason for this request"></textarea>
+                        <span class="cr-error-msg">Justification / Comments is required.</span>
+                    </div>
+                    <div class="cr-field cr-span2" id="crDeliveryAddressField">
+                        <label>Delivery Address<span class="cr-required">*</span></label>
+                        <textarea id="crDeliveryAddress" placeholder="Branch / office delivery address"></textarea>
+                        <span class="cr-error-msg">Delivery Address is required.</span>
+                    </div>
+                </div>
+
+                <!-- Attachments -->
+                <div class="cr-section-title">Picture Attachment</div>
+                <label class="cr-dropzone" id="crDropzone" for="crFileInput">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <div class="cr-dropzone-copy">
+                        <div class="cr-dropzone-text">Drag files here or click to upload</div>
+                        <div class="cr-dropzone-hint">Accepted: JPG, JPEG, PNG, PDF &middot; Maximum size 2MB</div>
+                    </div>
+                    <input type="file" id="crFileInput" accept=".jpg,.jpeg,.png,.pdf" multiple onchange="handleCrFileSelect(event)">
+                </label>
+                <div class="cr-file-list" id="crFileList"></div>
+            </div>
+
+            <div class="cr-modal-footer" id="crFormFooter">
+                <button type="button" class="cr-btn cr-btn-secondary" onclick="closeCreateRequestModal()">Cancel</button>
+                <button type="button" class="cr-btn cr-btn-primary" onclick="submitCreateRequest()">Submit Request</button>
+            </div>
+
+            <!-- Card Preview tab pane: toggled via the header "Form" / "Card Preview" tabs, fills the full popup content area -->
+            <div class="cid-preview-panel" id="cidPreviewPanel">
+                <div class="cid-preview-row">
+                    <div class="cid-card cid-card-front">
+                        <div class="cid-logo-badge">
+                            <img src="assets/ubl.png" alt="UBL" class="cid-logo-img">
+                            <span class="cid-logo-tagline">where <b>you</b> come <b>first</b></span>
+                        </div>
+                        <div class="cid-name">Mansoor Ahmed</div>
+                        <div class="cid-photo"><i class="fa-solid fa-user"></i></div>
+                    </div>
+
+                    <div class="cid-card cid-card-back">
+                        <div class="cid-back-top">
+                            <div class="cid-back-row">
+                                <div class="cid-back-field">
+                                    <span class="cid-back-label">Employee ID</span>
+                                    <span class="cid-back-value">923998</span>
+                                </div>
+                                <div class="cid-back-field cid-back-right">
+                                    <span class="cid-back-label">Issue Date</span>
+                                    <span class="cid-back-value">21-Jun-2025</span>
+                                </div>
+                            </div>
+                            <div class="cid-back-row">
+                                <div class="cid-back-field">
+                                    <span class="cid-back-label">CNIC No.</span>
+                                    <span class="cid-back-value">45104-0654198-5</span>
+                                </div>
+                                <div class="cid-back-field cid-back-right">
+                                    <span class="cid-back-label">Blood Group</span>
+                                    <span class="cid-back-value">&mdash;</span>
+                                </div>
+                            </div>
+                            <div class="cid-back-row">
+                                <div class="cid-back-field">
+                                    <span class="cid-back-label">Phone (Office)</span>
+                                    <span class="cid-back-value">0300-0269956</span>
+                                </div>
+                            </div>
+                            <div class="cid-back-sign">
+                                <span class="cid-sign-script">Authorized</span>
+                                <span class="cid-sign-label">Issuing Authority</span>
+                            </div>
+                        </div>
+                        <div class="cid-back-bottom">
+                            <i class="fa-solid fa-building cid-building-icon"></i>
+                            <div class="cid-back-return">
+                                If found please return to:<br>
+                                Human Resources Department<br>
+                                UBL Head Office,<br>
+                                I.I. Chundrigar Road,<br>
+                                Karachi, Pakistan.
+                            </div>
+                            <div class="cid-back-phone">+92 (21) 111-825-111, ext 2883</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Excel sheet row action: Preview Card (standalone, populated per selected row) -->
+    <div class="cr-modal-backdrop" id="cardPreviewBackdrop" onclick="if (event.target === this) closeCardPreviewModal();">
+        <div class="cr-modal" role="dialog" aria-modal="true" aria-labelledby="cardPreviewTitle">
+            <div class="cr-modal-header">
+                <h2 id="cardPreviewTitle"><i class="fa-solid fa-id-badge"></i> Card Preview</h2>
+                <button type="button" class="cr-modal-close" onclick="closeCardPreviewModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="cr-modal-body" style="display: flex; flex-direction: column;">
+                <div class="cid-preview-row">
+                    <div class="cid-card cid-card-front">
+                        <div class="cid-logo-badge">
+                            <img src="assets/ubl.png" alt="UBL" class="cid-logo-img">
+                            <span class="cid-logo-tagline">where <b>you</b> come <b>first</b></span>
+                        </div>
+                        <div class="cid-name" id="cpFrontName">&mdash;</div>
+                        <div class="cid-photo"><i class="fa-solid fa-user"></i></div>
+                    </div>
+
+                    <div class="cid-card cid-card-back">
+                        <div class="cid-back-top">
+                            <div class="cid-back-row">
+                                <div class="cid-back-field">
+                                    <span class="cid-back-label">Employee ID</span>
+                                    <span class="cid-back-value" id="cpBackEmpId">&mdash;</span>
+                                </div>
+                                <div class="cid-back-field cid-back-right">
+                                    <span class="cid-back-label">Issue Date</span>
+                                    <span class="cid-back-value" id="cpBackIssueDate">&mdash;</span>
+                                </div>
+                            </div>
+                            <div class="cid-back-row">
+                                <div class="cid-back-field">
+                                    <span class="cid-back-label">CNIC No.</span>
+                                    <span class="cid-back-value" id="cpBackCnic">&mdash;</span>
+                                </div>
+                                <div class="cid-back-field cid-back-right">
+                                    <span class="cid-back-label">Blood Group</span>
+                                    <span class="cid-back-value">&mdash;</span>
+                                </div>
+                            </div>
+                            <div class="cid-back-row">
+                                <div class="cid-back-field">
+                                    <span class="cid-back-label">Phone (Office)</span>
+                                    <span class="cid-back-value" id="cpBackPhone">&mdash;</span>
+                                </div>
+                            </div>
+                            <div class="cid-back-sign">
+                                <span class="cid-sign-script">Authorized</span>
+                                <span class="cid-sign-label">Issuing Authority</span>
+                            </div>
+                        </div>
+                        <div class="cid-back-bottom">
+                            <i class="fa-solid fa-building cid-building-icon"></i>
+                            <div class="cid-back-return">
+                                If found please return to:<br>
+                                Human Resources Department<br>
+                                UBL Head Office,<br>
+                                I.I. Chundrigar Road,<br>
+                                Karachi, Pakistan.
+                            </div>
+                            <div class="cid-back-phone">+92 (21) 111-825-111, ext 2883</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Excel sheet row action: View Image (standalone, no per-row photo on file in this prototype) -->
+    <div class="cr-modal-backdrop" id="imageViewBackdrop" onclick="if (event.target === this) closeImageViewModal();">
+        <div class="cr-modal" style="width: 360px;" role="dialog" aria-modal="true" aria-labelledby="imageViewTitle">
+            <div class="cr-modal-header">
+                <h2 id="imageViewTitle"><i class="fa-solid fa-image"></i> Applicant Photo</h2>
+                <button type="button" class="cr-modal-close" onclick="closeImageViewModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="cr-modal-body" style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px;">
+                <div class="iv-photo-frame"><i class="fa-solid fa-user"></i></div>
+                <div class="iv-name" id="ivName">&mdash;</div>
+                <div class="iv-note">No photo on file for this applicant in this prototype.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History drawer (right-side slide-over, triggered from the row action
+         menu's single consolidated "History" option). Replaces the old
+         centered Timeline modal; the lifecycle timeline content is kept
+         inside as its own section, above the manual comment feed which is
+         mocked via localStorage as a stand-in shared backend with vendor.html. -->
+    <div class="hd-backdrop" id="historyDrawerBackdrop" onclick="if (event.target === this) closeHistoryDrawer();">
+        <div class="history-drawer" role="dialog" aria-modal="true" aria-labelledby="historyDrawerTitle">
+            <div class="hd-header">
+                <div>
+                    <div class="hd-header-title" id="historyDrawerTitle">History &mdash; <span id="historyDrawerReqId">&mdash;</span></div>
+                    <div class="hd-header-sub" id="historyDrawerApplicant">&mdash;</div>
+                    <div class="hd-header-badges" id="historyDrawerBadges"></div>
+                </div>
+                <button type="button" class="hd-close-btn" onclick="closeHistoryDrawer()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="hd-body">
+                <div class="hd-section-label"><i class="fa-solid fa-timeline"></i> Request Lifecycle</div>
+                <div class="rt-timeline" id="timelineStagesList"></div>
+
+                <div class="hd-section-label"><i class="fa-solid fa-comments"></i> Comment History</div>
+                <div id="historyCommentFeed"></div>
+            </div>
+            <div class="hd-footer">
+                <textarea id="manualCommentInput" class="hd-textarea" placeholder="Add a manual comment for this request&hellip;"></textarea>
+                <button type="button" id="submitCommentBtn" class="hd-submit-btn" onclick="submitManualComment()"><i class="fa-solid fa-paper-plane"></i> Post Comment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================
+         Document Review Gallery module (full-screen workspace)
+         =================================================================== -->
+    <div class="cr-modal-backdrop" id="docReviewBackdrop" onclick="if (event.target === this) closeDocReviewModule();">
+        <div class="cr-modal" style="width: 95vw; max-width: 1400px; height: 90vh;" role="dialog" aria-modal="true" aria-labelledby="docReviewTitle">
+            <div class="cr-modal-header">
+                <h2 id="docReviewTitle"><i class="fa-solid fa-images"></i> Document Review</h2>
+                <button type="button" class="cr-modal-close" onclick="closeDocReviewModule()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="cr-modal-body">
+                <!-- Summary cards -->
+                <div class="dr-summary-row" id="drSummaryRow">
+                    <div class="dr-summary-card total" id="drSummaryCardAll" onclick="toggleDocSummaryFilter('all')" title="Show all images">
+                        <span class="dr-summary-value" id="drTotalCount">0</span>
+                        <span class="dr-summary-label">Total Uploaded Images</span>
+                    </div>
+                    <div class="dr-summary-card pending" id="drSummaryCardPending" onclick="toggleDocSummaryFilter('pending')" title="Show only pending images">
+                        <span class="dr-summary-value" id="drPendingCount">0</span>
+                        <span class="dr-summary-label">Pending Review</span>
+                    </div>
+                    <div class="dr-summary-card approved" id="drSummaryCardApproved" onclick="toggleDocSummaryFilter('approved')" title="Show only approved images">
+                        <span class="dr-summary-value" id="drApprovedCount">0</span>
+                        <span class="dr-summary-label">Approved</span>
+                    </div>
+                    <div class="dr-summary-card rejected" id="drSummaryCardRejected" onclick="toggleDocSummaryFilter('rejected')" title="Show only rejected images">
+                        <span class="dr-summary-value" id="drRejectedCount">0</span>
+                        <span class="dr-summary-label">Rejected</span>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="dr-filter-bar">
+                    <div class="dr-filter-item">
+                        <label>Status</label>
+                        <select id="drStatusFilter" onchange="applyDocReviewFilters()">
+                            <option value="all" selected>All</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="dr-filter-item">
+                        <label>Department</label>
+                        <select id="drDeptFilter" onchange="applyDocReviewFilters()">
+                            <option value="all" selected>All</option>
+                            <option value="Card Operations">Card Operations</option>
+                            <option value="Customer Service">Customer Service</option>
+                            <option value="HR Operations">HR Operations</option>
+                            <option value="Risk & Compliance">Risk &amp; Compliance</option>
+                            <option value="Finance & Accounts">Finance &amp; Accounts</option>
+                        </select>
+                    </div>
+                    <div class="dr-filter-item">
+                        <label>Location</label>
+                        <select id="drLocationFilter" onchange="applyDocReviewFilters()">
+                            <option value="all" selected>All</option>
+                            <option value="5000 - UBL Head Office, Karachi">Head Office, Karachi</option>
+                            <option value="1200 - UBL Gulberg Branch, Lahore">Gulberg, Lahore</option>
+                            <option value="3100 - UBL I.I. Chundrigar Branch, Karachi">I.I. Chundrigar, Karachi</option>
+                            <option value="4400 - UBL Blue Area Branch, Islamabad">Blue Area, Islamabad</option>
+                            <option value="2200 - UBL Clifton Branch, Karachi">Clifton, Karachi</option>
+                            <option value="6600 - UBL Cantt Branch, Rawalpindi">Cantt, Rawalpindi</option>
+                        </select>
+                    </div>
+                    <div class="dr-filter-item">
+                        <label>Uploaded From</label>
+                        <input type="date" id="drDateFrom" onchange="applyDocReviewFilters()">
+                    </div>
+                    <div class="dr-filter-item">
+                        <label>Uploaded To</label>
+                        <input type="date" id="drDateTo" onchange="applyDocReviewFilters()">
+                    </div>
+                    <div class="dr-filter-item">
+                        <label>Employee Name</label>
+                        <input type="text" id="drNameFilter" oninput="applyDocReviewFilters()">
+                    </div>
+                    <div class="dr-filter-item">
+                        <label>Request ID</label>
+                        <input type="text" id="drReqIdFilter" oninput="applyDocReviewFilters()">
+                    </div>
+                    <div class="dr-filter-item">
+                        <label>Search</label>
+                        <input type="text" id="drSearchInput" class="dr-search" placeholder="Search ID, name, department..." oninput="applyDocReviewFilters()">
+                    </div>
+                    <div class="dr-filter-item">
+                        <label>Card Functionality</label>
+                        <div class="dr-cardtype-split" title="Filter gallery by card functionality">
+                            <div class="dr-cardtype-half" id="drCardTypeHalfRF" onclick="toggleDrCardTypeFilter('RF')">RF</div>
+                            <div class="dr-cardtype-divider"></div>
+                            <div class="dr-cardtype-half" id="drCardTypeHalfHF" onclick="toggleDrCardTypeFilter('HF')">HF</div>
+                        </div>
+                    </div>
+                    <div class="dr-filter-item">
+                        <label>Card Type</label>
+                        <div class="dr-cardtype-split dr-cardtype-split-wide" title="Filter gallery by card type">
+                            <div class="dr-cardtype-half" id="drCardCategoryHalfConventional" onclick="toggleDrCardCategoryFilter('Conventional')">Conventional</div>
+                            <div class="dr-cardtype-divider"></div>
+                            <div class="dr-cardtype-half" id="drCardCategoryHalfIslamic" onclick="toggleDrCardCategoryFilter('Islamic')">Islamic</div>
+                        </div>
+                    </div>
+                    <button class="dr-btn-reset-filters" onclick="resetDocReviewFilters()">Reset</button>
+                </div>
+
+                <!-- Gallery grid -->
+                <div class="dr-gallery-grid" id="drGalleryGrid"></div>
+
+                <!-- Pagination -->
+                <div class="dr-pagination-bar" id="drPaginationBar">
+                    <span class="dr-pagination-summary" id="drPaginationSummary"></span>
+                    <div class="dr-pagination-controls" id="drPaginationControls">
+                        <button type="button" class="dr-page-btn" id="drPagePrevBtn" onclick="docReviewPrevPage()" aria-label="Previous page"><i class="fa-solid fa-chevron-left"></i></button>
+                        <span class="dr-page-label" id="drPageLabel">1 / 1</span>
+                        <button type="button" class="dr-page-btn" id="drPageNextBtn" onclick="docReviewNextPage()" aria-label="Next page"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button type="button" class="dr-showall-btn" id="drShowAllBtn" onclick="toggleDocReviewShowAll()">Show All</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================
+         Shared Preview Modal - used by both the Document Review Gallery
+         and the request table's Preview eye icon.
+         =================================================================== -->
+    <div class="cr-modal-backdrop" id="imagePreviewBackdrop" onclick="if (event.target === this) closeImagePreviewModal();">
+        <div class="cr-modal" style="width: 92vw; max-width: 1000px; height: 88vh;" role="dialog" aria-modal="true" aria-labelledby="pvTitle">
+            <div class="cr-modal-header">
+                <h2 id="pvTitle"><i class="fa-regular fa-image"></i> Document Preview &mdash; <span id="pvReqId">&mdash;</span></h2>
+                <button type="button" class="cr-modal-close" onclick="closeImagePreviewModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="pv-body">
+                <div class="pv-image-col">
+                    <div class="pv-image-wrap" id="pvImageWrap"></div>
+                    <div class="pv-toolbar">
+                        <button class="pv-tool-btn" onclick="previewZoomIn()" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                        <button class="pv-tool-btn" onclick="previewZoomOut()" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                        <button class="pv-tool-btn" onclick="previewZoomReset()" title="Reset Zoom"><i class="fa-solid fa-arrows-rotate"></i></button>
+                        <button class="pv-tool-btn" onclick="previewRotateLeft()" title="Rotate Left"><i class="fa-solid fa-rotate-left"></i></button>
+                        <button class="pv-tool-btn" onclick="previewRotateRight()" title="Rotate Right"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button class="pv-tool-btn" onclick="previewDownload()" title="Download"><i class="fa-solid fa-download"></i></button>
+                        <button class="pv-tool-btn" onclick="previewFullscreen()" title="Full Screen"><i class="fa-solid fa-expand"></i></button>
+                    </div>
+                    <div class="pv-nav-row">
+                        <button class="pv-nav-btn" id="pvPrevBtn" onclick="previewPrev()"><i class="fa-solid fa-chevron-left"></i> Previous</button>
+                        <span class="pv-counter" id="pvCounter">1 of 1</span>
+                        <button class="pv-nav-btn" id="pvNextBtn" onclick="previewNext()">Next <i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="pv-info-col">
+                    <div>
+                        <div class="pv-info-section-title">Request Details</div>
+                        <div class="pv-info-row"><span>Request ID</span><span id="pvReqId2">&mdash;</span></div>
+                        <div class="pv-info-row"><span>Employee Name</span><span id="pvEmpName">&mdash;</span></div>
+                        <div class="pv-info-row"><span>Employee Number</span><span id="pvEmpNumber">&mdash;</span></div>
+                        <div class="pv-info-row"><span>CNIC</span><span id="pvCnic">&mdash;</span></div>
+                        <div class="pv-info-row"><span>Department</span><span id="pvDept">&mdash;</span></div>
+                        <div class="pv-info-row"><span>Location</span><span id="pvLocation">&mdash;</span></div>
+                        <div class="pv-info-row"><span>Status</span><span id="pvStatus">&mdash;</span></div>
+                        <div class="pv-info-row"><span>Uploaded Date</span><span id="pvUploadDate">&mdash;</span></div>
+                        <div class="pv-info-row"><span>Uploaded Time</span><span id="pvUploadTime">&mdash;</span></div>
+                    </div>
+                    <div>
+                        <div class="pv-info-section-title">Image Details</div>
+                        <div class="pv-info-row"><span>File Name</span><span id="pvFileName">&mdash;</span></div>
+                        <div class="pv-info-row"><span>File Size</span><span id="pvFileSize">&mdash;</span></div>
+                        <div class="pv-info-row"><span>Dimensions</span><span id="pvDimensions">&mdash;</span></div>
+                        <div class="pv-info-row"><span>File Type</span><span id="pvFileType">&mdash;</span></div>
+                    </div>
+                    <div class="pv-actions">
+                        <button class="pv-btn-approve" onclick="previewApprove()"><i class="fa-solid fa-check"></i> Approve</button>
+                        <button class="pv-btn-reject" onclick="previewRejectPrompt()"><i class="fa-solid fa-xmark"></i> Reject</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject reason dialog (mandatory reason before rejection is submitted) -->
+    <div class="cr-modal-backdrop" id="rejectReasonBackdrop" onclick="if (event.target === this) closeRejectReasonModal();">
+        <div class="cr-modal" style="width: 380px;" role="dialog" aria-modal="true" aria-labelledby="rrTitle">
+            <div class="cr-modal-header">
+                <h2 id="rrTitle"><i class="fa-solid fa-circle-exclamation"></i> Reject Document</h2>
+                <button type="button" class="cr-modal-close" onclick="closeRejectReasonModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="cr-modal-body">
+                <div class="rr-field">
+                    <label>Rejection Reason<span class="cr-required">*</span></label>
+                    <select id="rejectReasonSelect" onchange="onRejectReasonChange()">
+                        <option value="" selected disabled>Select a reason</option>
+                        <option value="Image is blurry">Image is blurry</option>
+                        <option value="Image is cropped">Image is cropped</option>
+                        <option value="Wrong card uploaded">Wrong card uploaded</option>
+                        <option value="Unreadable">Unreadable</option>
+                        <option value="Damaged image">Damaged image</option>
+                        <option value="Custom reason">Custom reason</option>
+                    </select>
+                </div>
+                <div class="rr-field" id="rejectCustomReasonField" style="display:none;">
+                    <label>Custom Reason<span class="cr-required">*</span></label>
+                    <textarea id="rejectCustomReason" placeholder="Describe the issue with this image"></textarea>
+                </div>
+                <div class="rr-hint">A reason is required before this document can be rejected.</div>
+            </div>
+            <div class="cr-modal-footer">
+                <button type="button" class="cr-btn cr-btn-secondary" onclick="closeRejectReasonModal()">Cancel</button>
+                <button type="button" class="cr-btn cr-btn-primary" onclick="submitRejectReason()">Submit Rejection</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script src="js/state-and-request-modal.js"></script>
+    <script src="js/filters-multiselect.js"></script>
+    <script src="js/theme-and-chart-controls.js"></script>
+    <script src="js/mock-data.js"></script>
+    <script src="js/table-render-export.js"></script>
+    <script src="js/comments-and-timeline.js"></script>
+    <script src="js/doc-review-gallery.js"></script>
+    <script src="js/column-visibility.js"></script>
+    <script src="js/filters-apply-and-kpis.js"></script>
+    <script src="js/charts-init.js"></script>
+</body>
+</html>

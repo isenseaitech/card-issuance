@@ -1,0 +1,286 @@
+        /* Multi-select checkbox dropdown */
+        .ms-dropdown { position: relative; }
+
+        .ms-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            justify-content: space-between;
+            background: var(--input-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 3px 5px;
+            font-size: 0.68rem;
+            cursor: pointer;
+            min-width: 62px;
+            max-width: 120px;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+
+        .ms-toggle-btn:hover { border-color: var(--accent-blue); }
+
+        .ms-toggle-btn.filter-active {
+            border-color: var(--accent-blue);
+            background: linear-gradient(135deg, rgba(2, 132, 199, 0.14), rgba(2, 132, 199, 0.04));
+            box-shadow: 0 0 0 1px rgba(2, 132, 199, 0.25);
+        }
+
+        .ms-toggle-btn.filter-active .ms-text { color: var(--accent-blue); font-weight: 800; }
+
+        .ms-toggle-btn .ms-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ms-toggle-btn .fa-chevron-down {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .ms-dropdown.open .ms-toggle-btn { border-color: var(--accent-blue); }
+        .ms-dropdown.open .ms-toggle-btn .fa-chevron-down { transform: rotate(180deg); }
+
+        .ms-panel {
+            display: none;
+            position: fixed;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+            padding: 4px 0;
+            min-width: 150px;
+            max-height: 230px;
+            overflow-y: auto;
+            z-index: 500;
+        }
+
+        .ms-dropdown.open .ms-panel { display: block; }
+
+        .ms-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            font-size: 0.68rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .ms-option:hover { background: var(--filter-bg); }
+        .ms-option input { cursor: pointer; }
+
+        .chart-view-option.active {
+            background: var(--accent-blue);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .excel-filter-popup {
+            display: none;
+            position: fixed;
+            width: 210px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+            padding: 6px;
+            z-index: 60;
+        }
+
+        .excel-filter-popup.open { display: block; }
+
+        .ef-sort-row { display: flex; flex-direction: column; }
+
+        .ef-sort-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 8px;
+            font-size: 0.66rem;
+            color: var(--text-main);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .ef-sort-btn:hover { background: var(--filter-bg); }
+
+        .ef-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+        .ef-search {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 4px 6px;
+            font-size: 0.66rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--input-bg);
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .ef-select-all {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
+            margin-bottom: 3px;
+            font-weight: 700;
+            font-size: 0.6rem;
+        }
+
+        .ef-options-list {
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .ef-options-list .ef-option { text-transform: capitalize; }
+
+        .ef-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ef-btn-ok, .ef-btn-cancel {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 3px 12px;
+            font-size: 0.64rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .ef-btn-ok { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+        .ef-btn-cancel { background: var(--input-bg); color: var(--text-main); }
+
+        .row-action-menu {
+            display: none;
+            position: fixed;
+            min-width: 130px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+            padding: 4px;
+            z-index: 60;
+        }
+
+        .row-action-menu.open { display: block; }
+
+        .ra-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            font-size: 0.66rem;
+            color: var(--text-main);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .ra-option:hover { background: var(--filter-bg); color: var(--accent-blue); }
+        .ra-option i { width: 12px; text-align: center; }
+
+        select, input[type="text"], input[type="date"] {
+            background: var(--input-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 0.68rem;
+            outline: none;
+        }
+
+        .custom-date-input { width: 75px; text-align: center; }
+
+        .btn-apply {
+            background: var(--accent-blue);
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 5px;
+            font-size: 0.62rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-export-excel {
+            background: var(--accent-green);
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 0.62rem;
+            cursor: pointer;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-export-excel:hover { opacity: 0.9; }
+
+        .btn-export-excel:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn-export-excel.active,
+        .ms-dropdown.open .btn-export-excel {
+            box-shadow: 0 0 0 2px var(--accent-blue);
+        }
+
+        .ms-dropdown.open .btn-export-excel .fa-chevron-down { transform: rotate(180deg); }
+
+        .chart-header-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-chart-control {
+            background: var(--input-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 0.62rem;
+            cursor: pointer;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .btn-chart-control:hover { background: var(--filter-bg); }
+
+        .ms-dropdown.open .btn-chart-control {
+            box-shadow: 0 0 0 2px var(--accent-blue);
+            background: var(--filter-bg);
+        }
+
+        .ms-dropdown.open .btn-chart-control .fa-chevron-down { transform: rotate(180deg); }
+
+        .chart-type-option.active, .chart-color-option.active {
+            background: var(--accent-blue);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .palette-swatch {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+        }
+
