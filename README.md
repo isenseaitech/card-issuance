@@ -8,7 +8,7 @@ no build step, no backend; data is mocked client-side.
 ```
 card-issuance/
   dashboard/          Card Issuance & Operations executive dashboard (the live, modular app)
-  vendor-dashboard/   Vendor Card Print dashboard — a self-contained single-file page
+  vendor-dashboard/   Vendor Card Print dashboard — small React/JSX app compiled in-browser by Babel
   archive/            Historical single-file versions of the executive dashboard, kept for reference
     design19.html
     design20.html
@@ -17,12 +17,15 @@ card-issuance/
 
 ## Running
 
-Each dashboard is a static page. Open its `index.html` directly, or serve the folder:
+Both dashboards are static and need no build step. Serve the folder you want:
 
 ```
 cd dashboard          # or vendor-dashboard
 npx serve .
 ```
 
-See [dashboard/README.md](dashboard/README.md) for the file-by-file breakdown of the main app
-and the script load-order constraint.
+`dashboard/` also works when `index.html` is opened directly from disk; `vendor-dashboard/`
+does **not** (its JSX files are fetched with XHR, which browsers block from `file://`).
+
+Each folder has its own README with a file-by-file breakdown and the script load-order rules:
+[dashboard/README.md](dashboard/README.md), [vendor-dashboard/README.md](vendor-dashboard/README.md).
