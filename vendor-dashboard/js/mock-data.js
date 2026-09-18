@@ -1,26 +1,12 @@
 // ---------------------------------------------------------------------------
-// Mock data
+// Mock data (demo fixtures + seeded generators; business vocabulary lives in constants.js)
 // ---------------------------------------------------------------------------
 const NAMES = ['Ahmed Raza','Sana Malik','Bilal Hussain','Ayesha Khan','Usman Tariq','Hina Farooq',
   'Zeeshan Ali','Mahnoor Iqbal','Fahad Sheikh','Nida Aslam','Kamran Yousuf','Sadia Baig',
   'Waqas Ahmed','Rabia Sultan','Omar Farooqui','Farah Naz','Junaid Akram','Sobia Rehman',
   'Adeel Chaudhry','Maria Siddiqui'];
 
-const STATUSES = ['Received','In Process','Ready for Dispatch','Delivered','Pending','Rejected'];
-const CATEGORIES = ['Conventional','Islamic'];
-const FUNCTIONALITIES = ['HF','RF'];
-const ISSUANCE_TYPES = ['New','Renewal','Replacement'];
-const FREQUENCIES = ['Daily','Weekly','Monthly'];
-const HR_STATUSES = ['Confirmed','Pending HR','Declined'];
-const HR_REASONS = [
-  'Chip encoding error during terminal check.',
-  'Demographic mismatch with NADRA record.',
-  'Damaged card strip detected at QA stage.',
-  'Signature mismatch on application form.',
-  'Photo verification failed against CNIC.',
-];
 const UBL_AUTHORS = ['UBL HR Ops (Tariq M.)', 'UBL Ops (Sana K.)', 'UBL Branch Officer (Ali R.)'];
-const VENDOR_AUTHOR = 'Vendor Ops (TCS Print Facility)';
 
 function seededRandom(seed) {
   let s = seed;

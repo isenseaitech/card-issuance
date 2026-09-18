@@ -25,26 +25,51 @@ dashboard/
     modal-create-request.css                 Create Request modal
     modal-history-drawer.css                 History drawer, timeline and "View Image" row action
     modal-image-preview.css                  Shared image preview modal
-  js/                                        (listed in load order — see below)
-    state-and-request-modal.js               Global state (theme, filtered rows, selection); Create Request
-                                             modal; row selection and bulk vendor assignment
-    filters-multiselect.js                   Multi-select dropdown widgets and Excel-style column filter popups
-    theme-and-chart-controls.js              Dark/light theme, chart colour palettes and chart view/type switching
-    mock-data.js                             Department master data and mock applicant/document generation
-    table-render-export.js                   Date-range controls, dashboard refresh, table rendering, XLSX export
+  js/                                        (listed in load order - see below)
+    state.js                                 Shared state: currentFilteredApplicants (the one thing every
+                                             feature reads). Feature-specific state lives with its feature.
+    mock-data.js                             Master lists, generated applicants (mockApplicants), Document
+                                             Review records. No DOM access.
+    filters-multiselect.js                   Multi-select dropdowns, Excel-style column filter popups,
+                                             filter-count badge, filter bar toggle
+    header-controls.js                       Header toolbar: theme toggle, refresh / auto-refresh, fullscreen
+    chart-controls.js                        Chart view switching, chart type / colour palette rebuilds,
+                                             theme-aware chart colours, chart title
+    table-render-export.js                   Applicants table: filtering into currentFilteredApplicants,
+                                             sorting, row selection + bulk vendor assignment, XLSX/CSV
+                                             export, row actions
+    request-modal.js                         Create Request modal: open/close, tabs, validation, attachments
     comments-and-timeline.js                 History drawer: comment feed, timeline stages, timeline modal
-    doc-review-gallery.js                    Document Review module: filters, summary cards, gallery, pagination
+    doc-review-gallery.js                    Document Review module: filters, summary cards, gallery,
+                                             image preview, row action menu
     column-visibility.js                     Column show/hide panel, column drag-reorder and resize
-    filters-apply-and-kpis.js                applyFilters(), KPI computation and the quick-filter card actions
-    charts-init.js                           Chart.js plugin registration, chart build/refresh, chart click filters
+    filters-apply-and-kpis.js                Date-range controls, applyFilters(), reset, KPI cards and
+                                             approval-performance panel, all quick filters
+    charts-init.js                           Chart.js plugin registration, the ten charts, click-to-filter
+                                             selection state, updateAllCharts()
+    app.js                                   Startup: global Escape handling and the init sequence. Loaded last.
 ```
 
 ### Script load order matters
 
-All JS runs in global scope and the files share state through top-level `let`/`const`
-declarations and plain functions. `index.html` loads them in the order shown above; keep
-that order when adding or renaming files. `charts-init.js` must stay last because it
-registers plugins and draws the initial charts using everything defined before it.
+All JS runs in global scope: the files share state through top-level `let`/`const`
+declarations and call each other's plain functions, and the HTML's inline `onclick`
+handlers rely on those functions being globals. `index.html` loads the files in the
+order shown above; keep that order when adding or renaming files. The rules that make
+it work:
+
+- **Declare each global exactly once**, in the file that owns it. A second top-level
+  `let`/`const` with the same name in another file throws *Identifier has already been
+  declared* at load time.
+- **Only function bodies may reference other files' globals.** Anything that runs at load
+  time (top-level statements, chart construction in `charts-init.js`, the init calls in
+  `app.js`) may only use what an earlier script already defined.
+- **`app.js` stays last** and is the only place startup work happens; `charts-init.js`
+  stays just before it because it builds the charts everything else updates.
+- Keep feature-specific state in the feature's file; put state in `state.js` only when
+  several features genuinely share it.
+
+Formatting: 4-space indentation from column 0, LF line endings, no trailing whitespace.
 
 ## Running it
 

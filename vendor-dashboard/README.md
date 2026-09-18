@@ -24,7 +24,10 @@ vendor-dashboard/
     -- compiled by Babel, in this order --
     globals.js             React hook aliases (useState, useMemo, …) declared once for all files
     icons.jsx              Inline SVG icon components (ICONS)
-    mock-data.js           Constants, seeded RNG, mock request + comment generation, MOCK_DATA
+    constants.js           Business vocabulary (statuses, categories, functionalities, issuance
+                           types, frequencies, HR statuses/reasons) and VENDOR_AUTHOR
+    mock-data.js           Demo fixtures (names, UBL authors), seeded RNG, mock request + comment
+                           generation, MOCK_DATA
     badges.jsx             Status/category/functionality/HR badge styles and <Badge>
     filter-bar.jsx         <SelectField>, <FilterBar>
     metric-cards.jsx       <MetricCard>, <MetricRow> (clickable KPI tiles)

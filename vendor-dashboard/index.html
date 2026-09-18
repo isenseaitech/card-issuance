@@ -16,14 +16,9 @@
 
 <script src="js/error-overlay.js"></script>
 
-<!--
-  The app is written in JSX and compiled in the browser by Babel standalone.
-  Babel fetches each file below and runs them in document order; they share one
-  global scope, so the order matters (see README.md). Because the files are
-  fetched with XHR the page must be served over HTTP — it will not work from file://.
--->
 <script type="text/babel" data-presets="react" src="js/globals.js"></script>
 <script type="text/babel" data-presets="react" src="js/icons.jsx"></script>
+<script type="text/babel" data-presets="react" src="js/constants.js"></script>
 <script type="text/babel" data-presets="react" src="js/mock-data.js"></script>
 <script type="text/babel" data-presets="react" src="js/badges.jsx"></script>
 <script type="text/babel" data-presets="react" src="js/filter-bar.jsx"></script>

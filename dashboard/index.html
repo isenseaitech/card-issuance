@@ -1214,16 +1214,19 @@
         </div>
     </div>
 
-    <!-- JavaScript Logic -->
-    <script src="js/state-and-request-modal.js"></script>
-    <script src="js/filters-multiselect.js"></script>
-    <script src="js/theme-and-chart-controls.js"></script>
+    <!-- JavaScript Logic - classic scripts sharing one global scope; load order matters (see README.md) -->
+    <script src="js/state.js"></script>
     <script src="js/mock-data.js"></script>
+    <script src="js/filters-multiselect.js"></script>
+    <script src="js/header-controls.js"></script>
+    <script src="js/chart-controls.js"></script>
     <script src="js/table-render-export.js"></script>
+    <script src="js/request-modal.js"></script>
     <script src="js/comments-and-timeline.js"></script>
     <script src="js/doc-review-gallery.js"></script>
     <script src="js/column-visibility.js"></script>
     <script src="js/filters-apply-and-kpis.js"></script>
     <script src="js/charts-init.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
