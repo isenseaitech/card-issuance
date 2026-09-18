@@ -9,11 +9,10 @@ no build step, no backend; data is mocked client-side.
 card-issuance/
   dashboard/          Card Issuance & Operations executive dashboard (the live, modular app)
   vendor-dashboard/   Vendor Card Print dashboard — small React/JSX app compiled in-browser by Babel
-  archive/            Historical single-file versions of the executive dashboard, kept for reference
-    design19.html
-    design20.html
-    design22.html     The monolith that dashboard/ was extracted from
 ```
+
+Earlier single-file iterations of the executive dashboard (`design19/20/22.html`) are not kept in
+the tree; they live in git history under the initial commit if ever needed.
 
 ## Running
 

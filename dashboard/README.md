@@ -1,7 +1,7 @@
 # UBL Card Issuance Dashboard
 
-Executive dashboard for UBL Bank's Card Issuance & Operations. Restructured from the original
-single-file `design22.html` (kept for reference in [`../archive/`](../archive/)) into a plain,
+Executive dashboard for UBL Bank's Card Issuance & Operations. Restructured from an original
+single-file `design22.html` (retired; available in git history) into a plain,
 buildless static project — vanilla HTML/CSS/JS loaded via `<link>`/`<script>` tags in global
 scope, no bundler and no module system.
 
